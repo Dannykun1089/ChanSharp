@@ -11,19 +11,19 @@ namespace BascSharp4Chan
         ///   Properties   ///
         //////////////////////
 
+        private JObject                    MetaData        { get; set; }
         private HttpClient                 RequestsClient  { get; set; }
         private UrlGenerator               UrlGenerator    { get; set; }
 
-        public  string                     Name            { get; set; }
-        public  bool                       Https           { get; set; }
-        public  string                     Protocol        { get; set; }
-        public  Dictionary<int, Thread>    ThreadCache     { get; set; }
-        private JObject                    MetaData        { get; set; }
+        public string                  Name           { get; set; }
+        public string                  Title          { get => Title_get();          }
+        public bool                    IsWorksafe     { get => IsWorksafe_get();     }
+        public int                     PageCount      { get => PageCount_get();      }
+        public int                     ThreadsPerPage { get => ThreadsPerPage_get(); }
+        public bool                    Https          { get; set; }
+        public string                  Protocol       { get; set; }
+        public Dictionary<int, Thread> ThreadCache    { get; set; }
 
-        public  string                     Title           { get => Title_get();          }
-        public  bool                       IsWorksafe      { get => IsWorksafe_get();     }
-        public  int                        PageCount       { get => PageCount_get();      }
-        public  int                        ThreadsPerPage  { get => ThreadsPerPage_get(); }
 
 
 
@@ -37,12 +37,11 @@ namespace BascSharp4Chan
             Https = https;
             Protocol = https ? "https://" : "http://";
             ThreadCache = new Dictionary<int, Thread>();
+
             MetaData = new JObject();
-
             RequestsClient = session ?? new HttpClient();
+            RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
             UrlGenerator = new UrlGenerator(boardName, https);
-
-            RequestsClient.DefaultRequestHeaders.Add("User-Agent", "cs-4chan");
         }
 
 
@@ -65,19 +64,21 @@ namespace BascSharp4Chan
 
         public static Dictionary<string, Board> GetAllBoards(bool https = true, HttpClient session = null)
         {
-            // Request board list
+            // Request board list Json
             HttpClient requestsClient = session ?? new HttpClient();
             HttpResponseMessage resp = requestsClient.GetAsync( new UrlGenerator(null).BoardList() ).Result;
 
-            // Turn the Json string into a JObject with another format
+            // Turn the Json string into a JObject in the Board.MetaData format
             JObject metaData = Util.MetaDataFromRequest(resp);
 
+            // Itterate over each key value pair in the metadata and add the key (board name, E.G: "a", "aco", "d") to a list
             List<string> allBoards = new List<string>();
             foreach (KeyValuePair<string, JToken> metadataKVP in metaData)
             {
                 allBoards.Add(metadataKVP.Key);
             }
 
+            // pass the list of all the boards into the GetBoards method
             return GetBoards(allBoards.ToArray(), https, session);
         }
 
@@ -85,10 +86,14 @@ namespace BascSharp4Chan
         public static Dictionary<string, Board> GetBoards(string[] boardNameList, bool https = true, HttpClient session = null)
         {
             Dictionary<string, Board> retVal = new Dictionary<string, Board>();
+
+            // Itterate over each board name, add dictionary entry {boardName: BoardObject}
             foreach (string newBoardName in boardNameList)
             {
                 retVal.Add(newBoardName, new Board(newBoardName, https, session));
             }
+
+            // Return the dictionary
             return retVal;
         }
 
@@ -100,16 +105,16 @@ namespace BascSharp4Chan
 
         private void FetchBoardsMetadata(UrlGenerator urlGenerator)
         {
-            if (MetaData != null) { return; }
+            // Return if there is already metadata
+            if (this.MetaData != null) { return; }
 
-            //Request the boards.json api data
+            // Request the boards.json api data
             HttpResponseMessage resp = RequestsClient.GetAsync(urlGenerator.BoardList()).Result;
             resp.EnsureSuccessStatusCode();
 
-            //Deserialize and reconstruct the json response data
-            MetaData = Util.MetaDataFromRequest(resp);
+            // Deserialize and reconstruct the boards.json response data, then asign it to this instance's MetaData property
+            this.MetaData = Util.MetaDataFromRequest(resp);
 
-            //Free up memory
             resp.Dispose();
         }
 
@@ -118,6 +123,12 @@ namespace BascSharp4Chan
         {
             FetchBoardsMetadata(urlGenerator);
             return MetaData[board][key];
+        }
+
+
+        private JToken GetMetaData(string key)
+        {
+            return GetBoardMetadata(UrlGenerator, Name, key);
         }
 
 
@@ -131,31 +142,12 @@ namespace BascSharp4Chan
         }
 
 
-        private JArray GetJSONArray(string url)
+        private JArray CatalogToThreads(JArray catalogJson)
         {
-            HttpResponseMessage resp = RequestsClient.GetAsync(url).Result;
-            resp.EnsureSuccessStatusCode();
-            string responseContent = resp.Content.ReadAsStringAsync().Result;
-
-            return JArray.Parse(responseContent);
-        }
-
-
-        private JToken GetJSONToken(string url)
-        {
-            HttpResponseMessage resp = RequestsClient.GetAsync(url).Result;
-            resp.EnsureSuccessStatusCode();
-            string responseContent = resp.Content.ReadAsStringAsync().Result;
-
-            return JToken.Parse(responseContent);
-        }
-
-        private Thread[] CatalogToThreads(JArray catalogJson)
-        {
-            List<Thread> retVal = new List<Thread>();
-
             JArray threadsJson = new JArray();
+            JArray threadsList = new JArray();
 
+            // Reconstruct the catalog.json into [INSERT FORMAT DEFINITION HERE]
             foreach (JToken page in catalogJson)
             {
                 foreach (JToken thread in page["threads"])
@@ -164,38 +156,17 @@ namespace BascSharp4Chan
                 }
             }
 
-            threadsJson[0].Remove();
-
             foreach (JToken thread in threadsJson)
             {
-                Console.WriteLine(thread);
-                JObject threadAsJObject = JObject.FromObject(thread);
-                retVal.Add(Thread.FromJson(threadAsJObject, this, (int)thread["no"]));
+                threadsList.Add(JToken.Parse($"{{'posts': { thread } }}"));
             }
 
-            return retVal.ToArray();
-        }
-
-
-        private Thread[] BoardPageToThreads(JObject boardPage)
-        {
-            List<Thread> retVal = new List<Thread>();
-
-            JArray threadsJson = new JArray();
-            JArray threadsList = new JArray();
-
-            foreach (JToken thread in boardPage["threads"])
+            foreach (JToken thread in threadsList)
             {
-                threadsJson.Add(thread["posts"][0]);
+                thread["posts"][0]["last_replies"].Remove();
             }
 
-            foreach (JToken thread in threadsJson)
-            {
-                JObject threadAsJObject = JObject.FromObject(thread);
-                retVal.Add(Thread.FromJson(threadAsJObject, this, (int)thread["no"]));
-            }
-
-            return retVal.ToArray();
+            return threadsList;
         }
 
 
@@ -326,13 +297,6 @@ namespace BascSharp4Chan
         {
             string threadAPIURL = UrlGenerator.ThreadAPIUrls(threadID);
             return RequestsClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, threadAPIURL)).Result.IsSuccessStatusCode;
-             
-        }
-
-
-        public JToken GetMetaData(string key)
-        {
-            return GetBoardMetadata(UrlGenerator, Name, key);
         }
 
 
