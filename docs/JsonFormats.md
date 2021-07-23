@@ -59,12 +59,12 @@ for each board
 ```
 {
 	'board.Name':  {
-			'board':             (string) Board.Name,
+            'board':             (string) Board.Name,
 			'title':             (string) Board.Title,
 			'ws_board':          (int) 1 or 0 (1 if worksafe, 0 if not),
 			'per_page':          (int) Board.ThreadsPerPage,
 			'pages':             (int) Board.Pages,
-			'max_filesize':      (int) Board.MaxFilesize (in bytes),
+		    'max_filesize':      (int) Board.MaxFilesize (in bytes),
             'max_webm_filesize': (int) Board.MaxWebmFilesize (in bytes),
             'max_comment_chars': (int) Board.CommentChars (reply text limit),
             'max_webm_duration': (int) Board.WebmDuration (in seconds),
@@ -77,10 +77,10 @@ for each board
             },
             'meta_description':  (string) Board.MetaDescription (a short string describing the board),
             'is_archived':       (int) 1 or 0 (1 if archived, 0 if not)
-	},
+    },
 
-	...: {
-		...
-	},
+    ...: {
+        ...
+    },
 }
 ```
