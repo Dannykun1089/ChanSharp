@@ -2,7 +2,7 @@
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 
-namespace BascSharp4Chan
+namespace ChanSharp
 {
     public class File
     {

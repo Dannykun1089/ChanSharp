@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json.Linq;
 
-namespace BascSharp4Chan
+namespace ChanSharp
 {
     public class UrlGenerator
     {

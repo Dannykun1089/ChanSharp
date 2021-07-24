@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace BascSharp4Chan
+namespace ChanSharp
 {
     public class Board
     {
@@ -62,9 +62,24 @@ namespace BascSharp4Chan
         ///   Type Methods   ///
         ////////////////////////
 
+        public static Dictionary<string, Board> GetBoards(string[] boardNameList, bool https = true, HttpClient session = null)
+        {
+            Dictionary<string, Board> retVal = new Dictionary<string, Board>();
+
+            // Itterate over each board name, add dictionary entry {boardName: BoardObject}
+            foreach (string newBoardName in boardNameList)
+            {
+                retVal.Add(newBoardName, new Board(newBoardName, https, session));
+            }
+
+            // Return the dictionary
+            return retVal;
+        }
+
+
         public static Dictionary<string, Board> GetAllBoards(bool https = true, HttpClient session = null)
         {
-            // Request board list Json
+            // Request a list of all boards from 4Chan
             HttpClient requestsClient = session ?? new HttpClient();
             HttpResponseMessage resp = requestsClient.GetAsync( new UrlGenerator(null).BoardList() ).Result;
 
@@ -80,21 +95,6 @@ namespace BascSharp4Chan
 
             // pass the list of all the boards into the GetBoards method
             return GetBoards(allBoards.ToArray(), https, session);
-        }
-
-
-        public static Dictionary<string, Board> GetBoards(string[] boardNameList, bool https = true, HttpClient session = null)
-        {
-            Dictionary<string, Board> retVal = new Dictionary<string, Board>();
-
-            // Itterate over each board name, add dictionary entry {boardName: BoardObject}
-            foreach (string newBoardName in boardNameList)
-            {
-                retVal.Add(newBoardName, new Board(newBoardName, https, session));
-            }
-
-            // Return the dictionary
-            return retVal;
         }
 
 
@@ -132,13 +132,15 @@ namespace BascSharp4Chan
         }
 
 
-        private JObject GetJSON(string url)
+        private JToken GetJson(string url)
         {
+            // Send request to the url, ensure successfull status code
             HttpResponseMessage resp = RequestsClient.GetAsync(url).Result;
             resp.EnsureSuccessStatusCode();
-            string responseContent = resp.Content.ReadAsStringAsync().Result;
 
-            return JObject.Parse(responseContent);
+            // return the Json data as a JToken (JTokens can handle arrays and regular Json)
+            string responseContent = resp.Content.ReadAsStringAsync().Result;
+            return JToken.Parse(responseContent);
         }
 
 
@@ -155,12 +157,12 @@ namespace BascSharp4Chan
                     threadsJson.Add(thread);
                 }
             }
-
             foreach (JToken thread in threadsJson)
             {
                 threadsList.Add(JToken.Parse($"{{'posts': { thread } }}"));
             }
 
+            // Remove the 'last replies' data from each thread
             foreach (JToken thread in threadsList)
             {
                 thread["posts"][0]["last_replies"].Remove();
@@ -172,36 +174,47 @@ namespace BascSharp4Chan
 
         private Thread[] RequestThreads(string url)
         {
-            JToken json = GetJSONToken(url);
+            // Request the url and turn the Json response into a JToken
+            JToken Json = this.GetJson(url);
 
-            Thread[] threadList;
+            // If the Url is a catalog url, call the catalogToThreads method
+            // Else get it from the 'threads' Json propperty
+            JArray threadList;
             if (url == UrlGenerator.Catalog())
             {
-                threadList = CatalogToThreads(JArray.FromObject(json));
-                Console.WriteLine(threadList.Length);
+                threadList = CatalogToThreads(JArray.FromObject(Json));
             }
             else
             {
-                threadList = BoardPageToThreads(JObject.FromObject(json));
+                threadList = JArray.FromObject(Json["threads"]);
             }
 
+            // Go over each thread Json object
             List<Thread> threads = new List<Thread>();
-            foreach (Thread thread in threadList)
+            foreach (JToken threadJson in threadList)
             {
+                // Get the thread ID
+                int id = threadJson["posts"][0].Value<int>("no");
+
+                // If the thread ID is in the cache, retrieve it from the cache and set WantUpdate to true
+                // Else, create a new thread object from the Json data and add it to the cache
                 Thread newThread;
-                if (ThreadCache.ContainsKey(thread.ID))
+                if (ThreadCache.ContainsKey(id))
                 {
-                    newThread = ThreadCache[thread.ID];
+                    newThread = ThreadCache[id];
                     newThread.WantUpdate = true;
                 }
                 else
                 {
-                    newThread = thread;
-                    ThreadCache.Add(thread.ID, thread);
+                    newThread = Thread.FromJson(threadJson, this);
+                    ThreadCache.Add(id, newThread);
                 }
 
-                threads.Add(thread);
+                // Add the new thread to the list
+                threads.Add(newThread);
             }
+
+            // Return the list as an array
             return threads.ToArray();
         }
 
@@ -278,7 +291,7 @@ namespace BascSharp4Chan
 
         public int[] GetAllThreadIDs()
         {
-            JArray json = GetJSONArray(UrlGenerator.ThreadList());
+            JToken json = GetJson(UrlGenerator.ThreadList());
 
             List<int> threadIDsList = new List<int> { };
             foreach (JToken page in json)

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
-namespace BascSharp4Chan
+namespace ChanSharp
 {
     public class Thread
     {
@@ -145,6 +145,45 @@ namespace BascSharp4Chan
             return retVal;
         }
 
+
+        //Overload for instances where threadJson is a JToken
+        public static Thread FromJson(JToken threadJson, Board board, int threadID = 0, string lastModified = null)
+        {
+            Thread retVal = new Thread(board, threadID);
+
+            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
+            JObject firstPostJson = JObject.FromObject(postsJson[0]);
+            JObject[] repliesJson = Util.JTokenArrayToJObjectArray(
+                                                                new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array
+                                                                );
+
+            List<Post> replies = new List<Post>();
+            foreach (JObject reply in repliesJson)
+            {
+                replies.Add(new Post(retVal, reply));
+            }
+
+            retVal.ID            = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
+            retVal.Topic         = new Post(retVal, firstPostJson);
+            retVal.Replies       = replies.ToArray();
+            retVal.ReplyCount    = firstPostJson.Value<int>("replies");
+            retVal.ImageCount    = firstPostJson.Value<int>("images");
+            retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
+            retVal.OmittedPosts  = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
+            retVal.LastModified  = DateTime.Parse(lastModified);
+
+            // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
+            if (threadID == 0)
+            {
+                retVal.WantUpdate = true;
+            }
+            else
+            {
+                retVal.LastReplyID = retVal.Replies == null ? retVal.Topic.ID : retVal.Replies.Last().ID;
+            }
+
+            return retVal;
+        }
 
 
         ///////////////////////////////////

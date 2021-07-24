@@ -4,7 +4,7 @@ using System.Text;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
 
-namespace BascSharp4Chan
+namespace ChanSharp
 {
     class Util
     {
