@@ -35,6 +35,7 @@ namespace ChanSharp
         public Post[]   Posts          { get => Posts_get();          }
         public Post[]   AllPosts       { get => AllPosts_get();       }
         public File[]   Files          { get => Files_get();          }
+        public string[] ThumbnailUrls  { get => ThumbnailUrls_get();  }
         public string   Url            { get => Url_get();            }
         public string   SemanticSlug   { get => SemanticSlug_get();   }
         public string   SemanticUrl    { get => SemanticUrl_get();    }
@@ -357,6 +358,19 @@ namespace ChanSharp
             foreach (Post post in this.Posts)
             {
                 if (post.HasFile) { retVal.Add(post.File); }
+            }
+
+            return retVal.ToArray();
+        }
+
+
+        private string[] ThumbnailUrls_get()
+        {
+            List<string> retVal = new List<string>();
+
+            foreach (File file in this.Files)
+            {
+                retVal.Add(file.ThumbnailURL);
             }
 
             return retVal.ToArray();
