@@ -38,7 +38,6 @@ namespace ChanSharp
             Protocol = https ? "https://" : "http://";
             ThreadCache = new Dictionary<int, Thread>();
 
-            MetaData = new JObject();
             RequestsClient = session ?? new HttpClient();
             RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
             UrlGenerator = new UrlGenerator(boardName, https);
@@ -106,7 +105,7 @@ namespace ChanSharp
         private void FetchBoardsMetadata(UrlGenerator urlGenerator)
         {
             // Return if there is already metadata
-            if (this.MetaData != null) { return; }
+            if (this.MetaData != null) { Console.WriteLine("// Has metadata");  return; }
 
             // Request the boards.json api data
             HttpResponseMessage resp = RequestsClient.GetAsync(urlGenerator.BoardList()).Result;
@@ -341,22 +340,22 @@ namespace ChanSharp
 
         private string Title_get()
         {
-            return (string)GetMetaData("title");
+            return GetMetaData("title").ToObject<string>();
         }
 
         private bool IsWorksafe_get()
         {
-            return GetMetaData("ws_board") != null;
+            return GetMetaData("ws_board").ToObject<int>() == 1;
         }
 
         private int PageCount_get()
         {
-            return (int)GetMetaData("pages");
+            return GetMetaData("pages").ToObject<int>();
         }
 
         private int ThreadsPerPage_get()
         {
-            return (int)GetMetaData("per_page");
+            return GetMetaData("per_page").ToObject<int>();
         }
     }
 }
