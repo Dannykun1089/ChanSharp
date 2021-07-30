@@ -207,7 +207,7 @@ namespace ChanSharp
                 }
                 else
                 {
-                    newThread = ChanSharpThread.FromJson(threadJson, this);
+                    newThread = ChanSharpThread.FromJson(threadJson, this, lastModified: threadJson.Value<string>("last_modified"));
                     ThreadCache.Add(id, newThread);
                 }
 
