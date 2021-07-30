@@ -2,6 +2,23 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <ApplicationIcon></ApplicationIcon>
+    <Authors>DannyK</Authors>
+    <Company>N/A</Company>
+    <Product>N/A</Product>
+    <Description>A 4Chan API wrapper heavily based on bibanon's "basc-py4chan" python wrapper</Description>
+    <PackageLicenseExpression></PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/Dannykun1089/ChanSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Dannykun1089/ChanSharp.git</RepositoryUrl>
+    <PackageTags>4Chan, 4Channel, Yotsuba</PackageTags>
+    <NeutralLanguage>en</NeutralLanguage>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
