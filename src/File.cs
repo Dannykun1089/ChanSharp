@@ -4,34 +4,34 @@ using Newtonsoft.Json.Linq;
 
 namespace ChanSharp
 {
-    public class File
+    public class ChanSharpFile
     {
         //////////////////////
         ///   Properties   ///
         //////////////////////
 
-        private HttpClient   RequestsClient   { get; set; }
-        private JObject      Data             { get; set; }
-        private UrlGenerator UrlGenerator     { get; set; }
+        private HttpClient            RequestsClient   { get; set; }
+        private JObject               Data             { get; set; }
+        private ChanSharpUrlGenerator UrlGenerator     { get; set; }
 
-        public  Board        Board            { get; set; }
-        public  Thread       Thread           { get; set; }
-        public  Post         Post             { get; set; }
+        public ChanSharpBoard  Board            { get; set; }
+        public ChanSharpThread Thread           { get; set; }
+        public ChanSharpPost   Post             { get; set; }
 
-        public byte[]        FileMD5          { get => FileMD5_get();          }
-        public string        FileMD5Hex       { get => FileMD5Hex_get();       }
-        public string        FileName         { get => FileName_get();         }
-        public string        FileNameOriginal { get => FileNameOriginal_get(); }
-        public string        FileURL          { get => FileURL_get();          }
-        public string        FileExtension    { get => FileExtension_get();    }
-        public int           FileSize         { get => FileSize_get();         }
-        public int           FileWidth        { get => FileWidth_get();        }
-        public int           FileHeight       { get => FileHeight_get();       }
-        public bool          FileDeleted      { get => FileDeleted_get();      }
-        public int           ThumbnailWidth   { get => ThumbnailWidth_get();   }
-        public int           ThumbnailHeight  { get => ThumbnailHeight_get();  }
-        public string        ThumbnailFName   { get => ThumbnailFName_get();   }
-        public string        ThumbnailURL     { get => ThumbnailURL_get();     }
+        public byte[]          FileMD5          { get => FileMD5_get();          }
+        public string          FileMD5Hex       { get => FileMD5Hex_get();       }
+        public string          FileName         { get => FileName_get();         }
+        public string          FileNameOriginal { get => FileNameOriginal_get(); }
+        public string          FileURL          { get => FileURL_get();          }
+        public string          FileExtension    { get => FileExtension_get();    }
+        public int             FileSize         { get => FileSize_get();         }
+        public int             FileWidth        { get => FileWidth_get();        }
+        public int             FileHeight       { get => FileHeight_get();       }
+        public bool            FileDeleted      { get => FileDeleted_get();      }
+        public int             ThumbnailWidth   { get => ThumbnailWidth_get();   }
+        public int             ThumbnailHeight  { get => ThumbnailHeight_get();  }
+        public string          ThumbnailFName   { get => ThumbnailFName_get();   }
+        public string          ThumbnailURL     { get => ThumbnailURL_get();     }
 
 
 
@@ -39,7 +39,7 @@ namespace ChanSharp
         ///   Constructors   ///
         ////////////////////////
 
-        public File(Post post, JObject data)
+        public ChanSharpFile(ChanSharpPost post, JObject data)
         {
             this.Post   = post;
             this.Thread = post.Thread;
@@ -47,7 +47,7 @@ namespace ChanSharp
 
             this.RequestsClient = new HttpClient();
             this.Data   = data;
-            this.UrlGenerator = new UrlGenerator(Board.Name, Board.Https);
+            this.UrlGenerator = new ChanSharpUrlGenerator(Board.Name, Board.Https);
         }
 
 

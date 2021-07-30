@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 namespace ChanSharp
 {
-    class Util
+    internal class Util
     {
         public static string CleanCommentBody(string htmlComment)
         {

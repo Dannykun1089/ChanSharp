@@ -2,10 +2,11 @@
 using System.Net.Http;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace ChanSharp
 {
-    public class Board
+    public class ChanSharpBoard
     {
         //////////////////////
         ///   Properties   ///
@@ -13,16 +14,16 @@ namespace ChanSharp
 
         private JObject                    MetaData        { get; set; }
         private HttpClient                 RequestsClient  { get; set; }
-        private UrlGenerator               UrlGenerator    { get; set; }
+        private ChanSharpUrlGenerator      UrlGenerator    { get; set; }
 
-        public string                  Name           { get; set; }
-        public string                  Title          { get => Title_get();          }
-        public bool                    IsWorksafe     { get => IsWorksafe_get();     }
-        public int                     PageCount      { get => PageCount_get();      }
-        public int                     ThreadsPerPage { get => ThreadsPerPage_get(); }
-        public bool                    Https          { get; set; }
-        public string                  Protocol       { get; set; }
-        public Dictionary<int, Thread> ThreadCache    { get; set; }
+        public string                           Name           { get; set; }
+        public string                           Title          { get => Title_get();          }
+        public bool                             IsWorksafe     { get => IsWorksafe_get();     }
+        public int                              PageCount      { get => PageCount_get();      }
+        public int                              ThreadsPerPage { get => ThreadsPerPage_get(); }
+        public bool                             Https          { get; set; }
+        public string                           Protocol       { get; set; }
+        public Dictionary<int, ChanSharpThread> ThreadCache    { get; set; }
 
 
 
@@ -31,16 +32,17 @@ namespace ChanSharp
         ///   Constructors   ///
         ////////////////////////
 
-        public Board(string boardName, bool https = true, HttpClient session = null)
+        public ChanSharpBoard(string boardName, bool https = true, HttpClient session = null)
         {
-            Name = boardName;
-            Https = https;
-            Protocol = https ? "https://" : "http://";
-            ThreadCache = new Dictionary<int, Thread>();
+            Name        = boardName;
+            Https       = https;
+            Protocol    = https ? "https://" : "http://";
+            ThreadCache = new Dictionary<int, ChanSharpThread>();
 
             RequestsClient = session ?? new HttpClient();
+            UrlGenerator   = new ChanSharpUrlGenerator(boardName, https);
+
             RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
-            UrlGenerator = new UrlGenerator(boardName, https);
         }
 
 
@@ -61,14 +63,14 @@ namespace ChanSharp
         ///   Type Methods   ///
         ////////////////////////
 
-        public static Dictionary<string, Board> GetBoards(string[] boardNameList, bool https = true, HttpClient session = null)
+        public static Dictionary<string, ChanSharpBoard> GetBoards(string[] boardNameList, bool https = true, HttpClient session = null)
         {
-            Dictionary<string, Board> retVal = new Dictionary<string, Board>();
+            Dictionary<string, ChanSharpBoard> retVal = new Dictionary<string, ChanSharpBoard>();
 
             // Itterate over each board name, add dictionary entry {boardName: BoardObject}
             foreach (string newBoardName in boardNameList)
             {
-                retVal.Add(newBoardName, new Board(newBoardName, https, session));
+                retVal.Add(newBoardName, new ChanSharpBoard(newBoardName, https, session));
             }
 
             // Return the dictionary
@@ -76,11 +78,11 @@ namespace ChanSharp
         }
 
 
-        public static Dictionary<string, Board> GetAllBoards(bool https = true, HttpClient session = null)
+        public static Dictionary<string, ChanSharpBoard> GetAllBoards(bool https = true, HttpClient session = null)
         {
             // Request a list of all boards from 4Chan
             HttpClient requestsClient = session ?? new HttpClient();
-            HttpResponseMessage resp = requestsClient.GetAsync( new UrlGenerator(null).BoardList() ).Result;
+            HttpResponseMessage resp = requestsClient.GetAsync( new ChanSharpUrlGenerator(null).BoardList() ).Result;
 
             // Turn the Json string into a JObject in the Board.MetaData format
             JObject metaData = Util.MetaDataFromRequest(resp);
@@ -102,7 +104,7 @@ namespace ChanSharp
         ///   Private Instance Methods   ///
         ////////////////////////////////////
 
-        private void FetchBoardsMetadata(UrlGenerator urlGenerator)
+        private void FetchBoardsMetadata(ChanSharpUrlGenerator urlGenerator)
         {
             // Return if there is already metadata
             if (this.MetaData != null) { Console.WriteLine("// Has metadata");  return; }
@@ -118,7 +120,7 @@ namespace ChanSharp
         }
 
 
-        private JToken GetBoardMetadata(UrlGenerator urlGenerator, string board, string key)
+        private JToken GetBoardMetadata(ChanSharpUrlGenerator urlGenerator, string board, string key)
         {
             FetchBoardsMetadata(urlGenerator);
             return MetaData[board][key];
@@ -145,33 +147,33 @@ namespace ChanSharp
 
         private JArray CatalogToThreads(JArray catalogJson)
         {
-            JArray threadsJson = new JArray();
             JArray threadsList = new JArray();
 
             // Reconstruct the catalog.json into [INSERT FORMAT DEFINITION HERE]
             foreach (JToken page in catalogJson)
             {
-                foreach (JToken thread in page["threads"])
+                foreach (JObject thread in page.Value<JArray>("threads"))
                 {
-                    threadsJson.Add(thread);
+                    JArray posts;
+                    if (thread["last_replies"] == null)
+                    {
+                        posts = new JArray(thread);
+                    }
+                    else
+                    {
+                        posts = thread.Value<JArray>("last_replies");
+                        thread.Remove("last_replies");
+                        posts.Insert(0, thread);
+                    }
+                    threadsList.Add(JToken.Parse($"{{'posts': { posts } }}"));
                 }
-            }
-            foreach (JToken thread in threadsJson)
-            {
-                threadsList.Add(JToken.Parse($"{{'posts': { thread } }}"));
-            }
-
-            // Remove the 'last replies' data from each thread
-            foreach (JToken thread in threadsList)
-            {
-                thread["posts"][0]["last_replies"].Remove();
             }
 
             return threadsList;
         }
 
 
-        private Thread[] RequestThreads(string url)
+        private ChanSharpThread[] RequestThreads(string url)
         {
             // Request the url and turn the Json response into a JToken
             JToken Json = this.GetJson(url);
@@ -189,7 +191,7 @@ namespace ChanSharp
             }
 
             // Go over each thread Json object
-            List<Thread> threads = new List<Thread>();
+            List<ChanSharpThread> threads = new List<ChanSharpThread>();
             foreach (JToken threadJson in threadList)
             {
                 // Get the thread ID
@@ -197,7 +199,7 @@ namespace ChanSharp
 
                 // If the thread ID is in the cache, retrieve it from the cache and set WantUpdate to true
                 // Else, create a new thread object from the Json data and add it to the cache
-                Thread newThread;
+                ChanSharpThread newThread;
                 if (ThreadCache.ContainsKey(id))
                 {
                     newThread = ThreadCache[id];
@@ -205,7 +207,7 @@ namespace ChanSharp
                 }
                 else
                 {
-                    newThread = Thread.FromJson(threadJson, this);
+                    newThread = ChanSharpThread.FromJson(threadJson, this);
                     ThreadCache.Add(id, newThread);
                 }
 
@@ -223,10 +225,10 @@ namespace ChanSharp
         ///   Public Instance Methods   ///
         ///////////////////////////////////
 
-        public Thread GetThread(int threadID, bool updateIfCached = true, bool raise404 = false)
+        public ChanSharpThread GetThread(int threadID, bool updateIfCached = true, bool raise404 = false)
         {
             // Attempt to get cached thread
-            Thread cachedThread = ThreadCache.ContainsKey(threadID) ? ThreadCache[threadID] : null;
+            ChanSharpThread cachedThread = ThreadCache.ContainsKey(threadID) ? ThreadCache[threadID] : null;
 
             // Thread is not cached
             if (cachedThread is null)
@@ -245,7 +247,7 @@ namespace ChanSharp
                 }
 
                 // Get the thread from the request and insert it into the thread cache
-                Thread newThread = Thread.FromRequest(this.Name, resp, threadID);
+                ChanSharpThread newThread = ChanSharpThread.FromRequest(this.Name, resp, threadID);
                 ThreadCache.Add(threadID, newThread);
 
                 // Dispose of the request and return the thread
@@ -265,20 +267,20 @@ namespace ChanSharp
         }
 
 
-        public Thread[] GetThreads(int page = 1)
+        public ChanSharpThread[] GetThreads(int page = 1)
         {
             string url = UrlGenerator.PageUrls(page);
             return RequestThreads(url);
         }
 
 
-        public Thread[] GetAllThreads(bool expand = false)
+        public ChanSharpThread[] GetAllThreads(bool expand = false)
         {
             if (!expand) { return RequestThreads(UrlGenerator.Catalog()); }
 
             int[] threadIDs = GetAllThreadIDs();
 
-            List<Thread> threads = new List<Thread>();
+            List<ChanSharpThread> threads = new List<ChanSharpThread>();
             foreach (int id in threadIDs)
             {
                 threads.Add(GetThread(id));
@@ -314,7 +316,7 @@ namespace ChanSharp
 
         public void RefreshCache(bool ifWantUpdate = false)
         {
-            foreach (Thread thread in ThreadCache.Values)
+            foreach (ChanSharpThread thread in ThreadCache.Values)
             {
                 if (ifWantUpdate)
                 {
