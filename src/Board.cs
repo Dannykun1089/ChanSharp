@@ -2,7 +2,6 @@
 using System.Net.Http;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using System.IO;
 
 namespace ChanSharp
 {
@@ -16,15 +15,15 @@ namespace ChanSharp
         private HttpClient                 RequestsClient  { get; set; }
         private ChanSharpUrlGenerator      UrlGenerator    { get; set; }
 
-        public string                           Name           { get; set; }
-        public string                           Title          { get => Title_get();          }
-        public bool                             IsWorksafe     { get => IsWorksafe_get();     }
-        public int                              PageCount      { get => PageCount_get();      }
-        public int                              ThreadsPerPage { get => ThreadsPerPage_get(); }
-        public bool                             Https          { get; set; }
-        public string                           Protocol       { get; set; }
-        public Dictionary<int, ChanSharpThread> ThreadCache    { get; set; }
+        public   string                           Name           { get; set; }
+        public   string                           Title          { get => Title_get();          }
+        public   bool                             IsWorksafe     { get => IsWorksafe_get();     }
+        public   int                              PageCount      { get => PageCount_get();      }
+        public   int                              ThreadsPerPage { get => ThreadsPerPage_get(); }
+        public   bool                             Https          { get; set; }
+        public   string                           Protocol       { get; set; }
 
+        internal Dictionary<int, ChanSharpThread> ThreadCache    { get; set; }
 
 
 
@@ -67,7 +66,22 @@ namespace ChanSharp
         {
             Dictionary<string, ChanSharpBoard> retVal = new Dictionary<string, ChanSharpBoard>();
 
-            // Itterate over each board name, add dictionary entry {boardName: BoardObject}
+            // Itterate over each board name, add dictionary entry {boardName: new BoardObject}
+            foreach (string newBoardName in boardNameList)
+            {
+                retVal.Add(newBoardName, new ChanSharpBoard(newBoardName, https, session));
+            }
+
+            // Return the dictionary
+            return retVal;
+        }
+
+
+        public static Dictionary<string, ChanSharpBoard> GetBoards(List<string> boardNameList, bool https = true, HttpClient session = null)
+        {
+            Dictionary<string, ChanSharpBoard> retVal = new Dictionary<string, ChanSharpBoard>();
+
+            // Itterate over each board name, add dictionary entry {boardName: new BoardObject}
             foreach (string newBoardName in boardNameList)
             {
                 retVal.Add(newBoardName, new ChanSharpBoard(newBoardName, https, session));
@@ -85,13 +99,14 @@ namespace ChanSharp
             HttpResponseMessage resp = requestsClient.GetAsync( new ChanSharpUrlGenerator(null).BoardList() ).Result;
 
             // Turn the Json string into a JObject in the Board.MetaData format
-            JObject metaData = Util.MetaDataFromRequest(resp);
+            string responseContent = resp.Content.ReadAsStringAsync().Result;
+            JObject boardsJson = JObject.Parse( responseContent );
 
             // Itterate over each key value pair in the metadata and add the key (board name, E.G: "a", "aco", "d") to a list
             List<string> allBoards = new List<string>();
-            foreach (KeyValuePair<string, JToken> metadataKVP in metaData)
+            foreach (JToken boardJson in boardsJson.Value<JArray>("boards"))
             {
-                allBoards.Add(metadataKVP.Key);
+                allBoards.Add(boardJson.Value<string>("board"));
             }
 
             // pass the list of all the boards into the GetBoards method
@@ -107,7 +122,7 @@ namespace ChanSharp
         private void FetchBoardsMetadata(ChanSharpUrlGenerator urlGenerator)
         {
             // Return if there is already metadata
-            if (this.MetaData != null) { Console.WriteLine("// Has metadata");  return; }
+            if (this.MetaData != null) { return; }
 
             // Request the boards.json api data
             HttpResponseMessage resp = RequestsClient.GetAsync(urlGenerator.BoardList()).Result;
