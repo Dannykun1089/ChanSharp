@@ -13,7 +13,7 @@ namespace ChanSharp
 
         private JObject                    MetaData        { get; set; }
         private HttpClient                 RequestsClient  { get; set; }
-        private ChanSharpUrlGenerator      UrlGenerator    { get; set; }
+        private UrlGenerator      UrlGenerator    { get; set; }
 
         public   string                           Name           { get; set; }
         public   string                           Title          { get => Title_get();          }
@@ -39,7 +39,7 @@ namespace ChanSharp
             ThreadCache = new Dictionary<int, ChanSharpThread>();
 
             RequestsClient = session ?? new HttpClient();
-            UrlGenerator   = new ChanSharpUrlGenerator(boardName, https);
+            UrlGenerator   = new UrlGenerator(boardName, https);
 
             RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
         }
@@ -96,7 +96,7 @@ namespace ChanSharp
         {
             // Request a list of all boards from 4Chan
             HttpClient requestsClient = session ?? new HttpClient();
-            HttpResponseMessage resp = requestsClient.GetAsync( new ChanSharpUrlGenerator(null).BoardList() ).Result;
+            HttpResponseMessage resp = requestsClient.GetAsync( new UrlGenerator(null).BoardList() ).Result;
 
             // Turn the Json string into a JObject in the Board.MetaData format
             string responseContent = resp.Content.ReadAsStringAsync().Result;
@@ -119,7 +119,7 @@ namespace ChanSharp
         ///   Private Instance Methods   ///
         ////////////////////////////////////
 
-        private void FetchBoardsMetadata(ChanSharpUrlGenerator urlGenerator)
+        private void FetchBoardsMetadata(UrlGenerator urlGenerator)
         {
             // Return if there is already metadata
             if (this.MetaData != null) { return; }
@@ -135,7 +135,7 @@ namespace ChanSharp
         }
 
 
-        private JToken GetBoardMetadata(ChanSharpUrlGenerator urlGenerator, string board, string key)
+        private JToken GetBoardMetadata(UrlGenerator urlGenerator, string board, string key)
         {
             FetchBoardsMetadata(urlGenerator);
             return MetaData[board][key];

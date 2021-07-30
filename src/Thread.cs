@@ -15,7 +15,7 @@ namespace ChanSharp
 
 		private HttpClient            RequestsClient { get; set; }
 		private string                ApiUrl         { get; set; }
-		private ChanSharpUrlGenerator UrlGenerator   { get; set; }
+		private UrlGenerator UrlGenerator   { get; set; }
 
 		public ChanSharpBoard  Board          { get; set; }
 
@@ -65,7 +65,7 @@ namespace ChanSharp
 			this.LastModified   = DateTime.MinValue;
 
 			this.RequestsClient = new HttpClient();
-			this.UrlGenerator   = new ChanSharpUrlGenerator(board.Name, board.Https);
+			this.UrlGenerator   = new UrlGenerator(board.Name, board.Https);
 			this.ApiUrl         = UrlGenerator.ThreadAPIUrls(ID);
 		}
 
@@ -85,7 +85,7 @@ namespace ChanSharp
 			this.LastModified  = DateTime.MinValue;
 
 			this.RequestsClient = new HttpClient();
-			this.UrlGenerator = new ChanSharpUrlGenerator(boardName, this.Board.Https);
+			this.UrlGenerator = new UrlGenerator(boardName, this.Board.Https);
 			this.ApiUrl        = UrlGenerator.ThreadAPIUrls(ID);
 		}
 

@@ -10,7 +10,7 @@ namespace ChanSharp
         ///   Properties   ///
         //////////////////////
 
-        private ChanSharpUrlGenerator UrlGenerator { get; set; }
+        private UrlGenerator UrlGenerator { get; set; }
 
         public ChanSharpBoard  Board        { get; set; }
         public ChanSharpThread Thread       { get; set; }
@@ -47,7 +47,7 @@ namespace ChanSharp
             this.Thread = thread;
 
             this.Data = data;
-            this.UrlGenerator = new ChanSharpUrlGenerator(thread.Board.Name, thread.Board.Https);
+            this.UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
         }
 
 
@@ -56,7 +56,7 @@ namespace ChanSharp
             this.Thread = new ChanSharpThread(boardName, threadID);
 
             this.Data = data;
-            this.UrlGenerator = new ChanSharpUrlGenerator(this.Thread.Board.Name, this.Thread.Board.Https);
+            this.UrlGenerator = new UrlGenerator(this.Thread.Board.Name, this.Thread.Board.Https);
         }
 
 
@@ -65,7 +65,7 @@ namespace ChanSharp
             this.Thread = thread;
 
             this.Data = JObject.FromObject(data);
-            this.UrlGenerator = new ChanSharpUrlGenerator(thread.Board.Name, thread.Board.Https);
+            this.UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
         }
 
 
@@ -74,7 +74,7 @@ namespace ChanSharp
             this.Thread = new ChanSharpThread(boardName, threadID);
 
             this.Data = JObject.FromObject(data);
-            this.UrlGenerator = new ChanSharpUrlGenerator(this.Thread.Board.Name, this.Thread.Board.Https);
+            this.UrlGenerator = new UrlGenerator(this.Thread.Board.Name, this.Thread.Board.Https);
         }
 
 

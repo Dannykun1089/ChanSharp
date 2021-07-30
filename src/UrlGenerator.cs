@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace ChanSharp
 {
-    public class ChanSharpUrlGenerator
+    internal class UrlGenerator
     {
         //////////////////////
         ///   Properties   ///
@@ -24,7 +24,7 @@ namespace ChanSharp
         ///   Constructors   ///
         ////////////////////////
 
-        public ChanSharpUrlGenerator(string boardName, bool https = true)
+        public UrlGenerator(string boardName, bool https = true)
         {
             BoardName = boardName;
             Protocol = https ? "https://" : "http://";

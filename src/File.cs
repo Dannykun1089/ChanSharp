@@ -12,7 +12,7 @@ namespace ChanSharp
 
         private HttpClient            RequestsClient   { get; set; }
         private JObject               Data             { get; set; }
-        private ChanSharpUrlGenerator UrlGenerator     { get; set; }
+        private UrlGenerator UrlGenerator     { get; set; }
 
         public ChanSharpBoard  Board            { get; set; }
         public ChanSharpThread Thread           { get; set; }
@@ -47,7 +47,7 @@ namespace ChanSharp
 
             this.RequestsClient = new HttpClient();
             this.Data   = data;
-            this.UrlGenerator = new ChanSharpUrlGenerator(Board.Name, Board.Https);
+            this.UrlGenerator = new UrlGenerator(Board.Name, Board.Https);
         }
 
 
