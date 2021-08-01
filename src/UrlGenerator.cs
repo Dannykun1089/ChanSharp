@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 
 namespace ChanSharp
 {
@@ -91,6 +92,7 @@ namespace ChanSharp
         public string ThumbUrls(string tim)
         {
             return string.Format(Urls["data"].Value<string>("thumbs"),
+                                  this.BoardName,
                                   tim);
         }
 
@@ -132,7 +134,7 @@ namespace ChanSharp
                                                 }},
                                         'data': {{
                                                      'file':   '{ Domain["file"] }/{{0}}/{{1}}{{2}}',
-                                                     'thumbs': '{ Domain["thunbs"] }/{{0}}/{{1}}s.jpg',
+                                                     'thumbs': '{ Domain["thumbs"] }/{{0}}/{{1}}s.jpg',
                                                      'static': '{ Domain["static"] }/image/{{0}}'
                                                 }}
                                    }}");
