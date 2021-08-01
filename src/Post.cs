@@ -181,8 +181,7 @@ namespace ChanSharp
 
         private ChanSharpFile File_get()
         {
-            if (!HasFile) { return null; }
-            return new ChanSharpFile(this, Data);
+            return this.HasFile ? new ChanSharpFile(this) : null; 
         }
 
 

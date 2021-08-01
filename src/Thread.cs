@@ -370,7 +370,7 @@ namespace ChanSharp
 
 			foreach (ChanSharpFile file in this.Files)
 			{
-				retVal.Add(file.ThumbnailURL);
+				retVal.Add(file.ThumbnailUrl);
 			}
 
 			return retVal.ToArray();
