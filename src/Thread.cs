@@ -15,7 +15,7 @@ namespace ChanSharp
 
 		private HttpClient            RequestsClient { get; set; }
 		private string                ApiUrl         { get; set; }
-		private UrlGenerator UrlGenerator   { get; set; }
+		private UrlGenerator          UrlGenerator   { get; set; }
 
 		public ChanSharpBoard  Board          { get; set; }
 
@@ -66,7 +66,7 @@ namespace ChanSharp
 
 			this.RequestsClient = new HttpClient();
 			this.UrlGenerator   = new UrlGenerator(board.Name, board.Https);
-			this.ApiUrl         = UrlGenerator.ThreadAPIUrls(ID);
+			this.ApiUrl         = UrlGenerator.ThreadApiUrl(ID);
 		}
 
 
@@ -86,7 +86,7 @@ namespace ChanSharp
 
 			this.RequestsClient = new HttpClient();
 			this.UrlGenerator = new UrlGenerator(boardName, this.Board.Https);
-			this.ApiUrl        = UrlGenerator.ThreadAPIUrls(ID);
+			this.ApiUrl        = UrlGenerator.ThreadApiUrl(ID);
 		}
 
 
@@ -206,7 +206,7 @@ namespace ChanSharp
 			HttpResponseMessage resp;
 			try
 			{
-				resp = RequestsClient.GetAsync( UrlGenerator.ThreadAPIUrls(ID) ).Result;
+				resp = RequestsClient.GetAsync( UrlGenerator.ThreadApiUrl(ID) ).Result;
 			}
 			catch
 			{
@@ -379,7 +379,7 @@ namespace ChanSharp
 
 		private string Url_get()
 		{
-			return UrlGenerator.ThreadAPIUrls(ID);
+			return UrlGenerator.ThreadApiUrl(this.ID);
 		}
 
 		private string SemanticSlug_get()

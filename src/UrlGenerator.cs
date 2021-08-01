@@ -63,7 +63,7 @@ namespace ChanSharp
         }
 
 
-        public string ThreadAPIUrls(int threadID)
+        public string ThreadApiUrl(int threadID)
         {
             return string.Format(Urls["api"].Value<string>("thread"),
                                   BoardName,

@@ -249,7 +249,7 @@ namespace ChanSharp
             if (cachedThread is null)
             {
                 // Make a request to http(s)://a.4cdn.org/{board}/thread/{threadID}.json
-                HttpResponseMessage resp = RequestsClient.GetAsync(UrlGenerator.ThreadAPIUrls(threadID)).Result;
+                HttpResponseMessage resp = RequestsClient.GetAsync(UrlGenerator.ThreadApiUrl(threadID)).Result;
 
                 // Check if the request was ok
                 if (raise404)
@@ -324,7 +324,7 @@ namespace ChanSharp
 
         public bool ThreadExists(int threadID)
         {
-            string threadAPIURL = UrlGenerator.ThreadAPIUrls(threadID);
+            string threadAPIURL = UrlGenerator.ThreadApiUrl(threadID);
             return RequestsClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, threadAPIURL)).Result.IsSuccessStatusCode;
         }
 
