@@ -11,19 +11,19 @@ namespace ChanSharp
         ///   Properties   ///
         //////////////////////
 
-        private JObject                    MetaData        { get; set; }
-        private HttpClient                 RequestsClient  { get; set; }
-        private UrlGenerator      UrlGenerator    { get; set; }
+        private JObject                           MetaData       { get; set; }
+        private HttpClient                        RequestsClient { get; }
+        private UrlGenerator                      UrlGenerator   { get; }
 
-        public   string                           Name           { get; set; }
+        public   string                           Name           { get; }
         public   string                           Title          { get => Title_get();          }
         public   bool                             IsWorksafe     { get => IsWorksafe_get();     }
         public   int                              PageCount      { get => PageCount_get();      }
         public   int                              ThreadsPerPage { get => ThreadsPerPage_get(); }
-        public   bool                             Https          { get; set; }
-        public   string                           Protocol       { get; set; }
+        public   bool                             Https          { get; }
+        public   string                           Protocol       { get; }
 
-        internal Dictionary<int, ChanSharpThread> ThreadCache    { get; set; }
+        internal Dictionary<int, ChanSharpThread> ThreadCache    { get; }
 
 
 
@@ -33,15 +33,16 @@ namespace ChanSharp
 
         public ChanSharpBoard(string boardName, bool https = true, HttpClient session = null)
         {
-            Name        = boardName;
-            Https       = https;
-            Protocol    = https ? "https://" : "http://";
-            ThreadCache = new Dictionary<int, ChanSharpThread>();
+            this.Name        = boardName;
+            this.Https       = https;
+            this.Protocol    = https ? "https://" : "http://";
 
-            RequestsClient = session ?? new HttpClient();
-            UrlGenerator   = new UrlGenerator(boardName, https);
+            this.RequestsClient = session ?? new HttpClient();
+            this.UrlGenerator   = new UrlGenerator(boardName, https);
 
-            RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
+            this.ThreadCache = new Dictionary<int, ChanSharpThread>();
+
+            this.RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
         }
 
 
@@ -53,7 +54,7 @@ namespace ChanSharp
         public override string ToString()
         {
             return String.Format( "<Board /{0}/>",
-                Name );
+                this.Name );
         }
 
 
@@ -77,6 +78,7 @@ namespace ChanSharp
         }
 
 
+        // System.Collections.Generic.List<string> overload variant
         public static Dictionary<string, ChanSharpBoard> GetBoards(List<string> boardNameList, bool https = true, HttpClient session = null)
         {
             Dictionary<string, ChanSharpBoard> retVal = new Dictionary<string, ChanSharpBoard>();
@@ -98,11 +100,11 @@ namespace ChanSharp
             HttpClient requestsClient = session ?? new HttpClient();
             HttpResponseMessage resp = requestsClient.GetAsync( new UrlGenerator(null).BoardList() ).Result;
 
-            // Turn the Json string into a JObject in the Board.MetaData format
+            // Parse the response content into a JObject
             string responseContent = resp.Content.ReadAsStringAsync().Result;
             JObject boardsJson = JObject.Parse( responseContent );
 
-            // Itterate over each key value pair in the metadata and add the key (board name, E.G: "a", "aco", "d") to a list
+            // Itterate over each board and add its name to the list
             List<string> allBoards = new List<string>();
             foreach (JToken boardJson in boardsJson.Value<JArray>("boards"))
             {
@@ -110,7 +112,7 @@ namespace ChanSharp
             }
 
             // pass the list of all the boards into the GetBoards method
-            return GetBoards(allBoards.ToArray(), https, session);
+            return GetBoards(allBoards, https, session);
         }
 
 
@@ -128,9 +130,10 @@ namespace ChanSharp
             HttpResponseMessage resp = RequestsClient.GetAsync(urlGenerator.BoardList()).Result;
             resp.EnsureSuccessStatusCode();
 
-            // Deserialize and reconstruct the boards.json response data, then asign it to this instance's MetaData property
+            // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
             this.MetaData = Util.MetaDataFromRequest(resp);
 
+            // Finish up
             resp.Dispose();
         }
 
