@@ -379,7 +379,7 @@ namespace ChanSharp
 
 		private string Url_get()
 		{
-			return UrlGenerator.ThreadApiUrl(this.ID);
+			return UrlGenerator.ThreadUrl(this.ID);
 		}
 
 		private string SemanticSlug_get()
