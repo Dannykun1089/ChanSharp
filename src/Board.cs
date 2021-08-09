@@ -296,10 +296,8 @@ namespace ChanSharp
         {
             if (!expand) { return RequestThreads(UrlGenerator.Catalog()); }
 
-            int[] threadIDs = GetAllThreadIDs();
-
             List<ChanSharpThread> threads = new List<ChanSharpThread>();
-            foreach (int id in threadIDs)
+            foreach (int id in this.GetAllThreadIDs())
             {
                 threads.Add(GetThread(id));
             }

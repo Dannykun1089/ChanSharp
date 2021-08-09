@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
+using System.Net.Http.Headers;
 
 namespace ChanSharp
 {
@@ -62,7 +63,7 @@ namespace ChanSharp
 			this.Replies        = null;
 			this.LastReplyID    = 0;
 			this.WantUpdate     = false;
-			this.LastModified   = DateTime.MinValue;
+			this.LastModified   = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
 			this.RequestsClient = new HttpClient();
 			this.UrlGenerator   = new UrlGenerator(board.Name, board.Https);
@@ -82,7 +83,7 @@ namespace ChanSharp
 			this.Replies       = null;
 			this.WantUpdate    = false;
 			this.LastReplyID   = 0;
-			this.LastModified  = DateTime.MinValue;
+			this.LastModified  = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
 			this.RequestsClient = new HttpClient();
 			this.UrlGenerator = new UrlGenerator(boardName, this.Board.Https);
@@ -171,7 +172,7 @@ namespace ChanSharp
 			retVal.ImageCount    = firstPostJson.Value<int>("images");
 			retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
 			retVal.OmittedPosts  = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
-			retVal.LastModified  = lastModified == null ? DateTime.MinValue : DateTime.Parse(lastModified);
+			retVal.LastModified  = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
 
 			// If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
 			if (threadID == 0)
@@ -198,15 +199,15 @@ namespace ChanSharp
 
 			if (LastModified != null)
 			{
-				string httpHeaderPattern = "ddd, dd, MMM, yyyy HH:mm:ss 'GMT'";
-				RequestsClient.DefaultRequestHeaders.Add("If-Modified-Since", LastModified.ToString(httpHeaderPattern));
+			
 			}
 
 			// Random connection errors, return 0 and try again later
 			HttpResponseMessage resp;
 			try
 			{
-				resp = RequestsClient.GetAsync( UrlGenerator.ThreadApiUrl(ID) ).Result;
+				RequestsClient.DefaultRequestHeaders.IfModifiedSince = LastModified;
+				resp = RequestsClient.GetAsync( UrlGenerator.ThreadApiUrl(ID)).Result;
 			}
 			catch
 			{
@@ -230,7 +231,7 @@ namespace ChanSharp
 				// 200 - OK: Thread is alive
 				case HttpStatusCode.OK:
 					// If we somehow 404'ed, put ourself back in the cache
-					if (Is404)
+					if (this.Is404)
 					{
 						this.Is404 = false;
 						this.Board.ThreadCache.Add(ID, this);
@@ -344,6 +345,7 @@ namespace ChanSharp
 		}
 
 
+		// Check this please
 		private ChanSharpPost[] AllPosts_get()
 		{
 			Expand();
