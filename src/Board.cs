@@ -225,7 +225,7 @@ namespace ChanSharp
                 }
                 else
                 {
-                    newThread = ChanSharpThread.FromJson(threadJson, this, lastModified: threadJson.Value<string>("last_modified"));
+                    newThread = ChanSharpThread.FromJson(threadJson, this, id, threadJson.Value<string>("last_modified"));
                     ThreadCache.Add(id, newThread);
                 }
 
@@ -294,8 +294,9 @@ namespace ChanSharp
 
         public ChanSharpThread[] GetAllThreads(bool expand = false)
         {
-            if (!expand) { return RequestThreads(UrlGenerator.Catalog()); }
+            if (!expand) { return RequestThreads( UrlGenerator.Catalog() ); }
 
+            // Itterate over all the thread IDs and call this.GetThread() for each of them
             List<ChanSharpThread> threads = new List<ChanSharpThread>();
             foreach (int id in this.GetAllThreadIDs())
             {

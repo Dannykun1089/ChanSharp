@@ -111,28 +111,36 @@ namespace ChanSharp
 
 		public static ChanSharpThread FromJson(JObject threadJson, ChanSharpBoard board, int threadID = 0, string lastModified = null)
 		{
+			// ERR TO BE FIXED - Single-post threads are counting the first post in the replies 
 			ChanSharpThread retVal = new ChanSharpThread(board, threadID);
 
-			JToken[] postsJson     = threadJson["posts"].ToObject<JToken[]>();
-			JObject  firstPostJson = JObject.FromObject(postsJson[0]);
-			JObject[] repliesJson  = Util.JTokenArrayToJObjectArray(
-																new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array
-																);
-
-			List<ChanSharpPost> replies = new List<ChanSharpPost>();
-			foreach (JObject reply in repliesJson)
+			JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
+			JObject firstPostJson = JObject.FromObject(postsJson[0]);
+			JToken[] repliesJson;
+			List<ChanSharpPost> replies; 
+			if (postsJson.Length == 1)
 			{
-				replies.Add( new ChanSharpPost(retVal, reply) );
+				repliesJson = null;
+				replies = null;
+			}
+			else
+			{
+				repliesJson = new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array;
+				replies = new List<ChanSharpPost>();
+				foreach (JObject reply in repliesJson)
+				{
+					replies.Add(new ChanSharpPost(retVal, reply));
+				}
 			}
 
-			retVal.ID            = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
-			retVal.Topic         = new ChanSharpPost(retVal, firstPostJson);
-			retVal.Replies       = replies.ToArray();
-			retVal.ReplyCount    = firstPostJson.Value<int>("replies");
-			retVal.ImageCount    = firstPostJson.Value<int>("images");
+			retVal.ID = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
+			retVal.Topic = new ChanSharpPost(retVal, firstPostJson);
+			retVal.Replies = replies.ToArray();
+			retVal.ReplyCount = firstPostJson.Value<int>("replies");
+			retVal.ImageCount = firstPostJson.Value<int>("images");
 			retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
-			retVal.OmittedPosts  = firstPostJson["omitted_posts"] == null  ? 0 : firstPostJson.Value<int>("omitted_posts");
-			retVal.LastModified  = DateTime.Parse(lastModified);
+			retVal.OmittedPosts = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
+			retVal.LastModified = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
 
 			// If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
 			if (threadID == 0)
@@ -151,28 +159,37 @@ namespace ChanSharp
 		//Overload for instances where threadJson is a JToken
 		public static ChanSharpThread FromJson(JToken threadJson, ChanSharpBoard board, int threadID = 0, string lastModified = null)
 		{
+			Console.WriteLine($"Called for thread { threadJson["posts"][0].Value<int>("no") }");
+			// ERR TO BE FIXED - Single-post threads are counting the first post in the replies 
 			ChanSharpThread retVal = new ChanSharpThread(board, threadID);
 
 			JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
 			JObject firstPostJson = JObject.FromObject(postsJson[0]);
-			JObject[] repliesJson = Util.JTokenArrayToJObjectArray(
-																new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array
-																);
-
-			List<ChanSharpPost> replies = new List<ChanSharpPost>();
-			foreach (JObject reply in repliesJson)
+			JToken[] repliesJson;
+			List<ChanSharpPost> replies;
+			if (postsJson.Length == 1)
 			{
-				replies.Add(new ChanSharpPost(retVal, reply));
+				repliesJson = null;
+				replies = null;
+			}
+			else
+			{
+				repliesJson = new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array;
+				replies = new List<ChanSharpPost>();
+				foreach (JObject reply in repliesJson)
+				{
+					replies.Add(new ChanSharpPost(retVal, reply));
+				}
 			}
 
-			retVal.ID            = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
-			retVal.Topic         = new ChanSharpPost(retVal, firstPostJson);
-			retVal.Replies       = replies.ToArray();
-			retVal.ReplyCount    = firstPostJson.Value<int>("replies");
-			retVal.ImageCount    = firstPostJson.Value<int>("images");
+			retVal.ID = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
+			retVal.Topic = new ChanSharpPost(retVal, firstPostJson);
+			retVal.Replies = replies == null ? null : replies.ToArray();
+			retVal.ReplyCount = firstPostJson.Value<int>("replies");
+			retVal.ImageCount = firstPostJson.Value<int>("images");
 			retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
-			retVal.OmittedPosts  = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
-			retVal.LastModified  = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
+			retVal.OmittedPosts = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
+			retVal.LastModified = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
 
 			// If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
 			if (threadID == 0)
@@ -337,11 +354,19 @@ namespace ChanSharp
 
 		private ChanSharpPost[] Posts_get()
 		{
-			List<ChanSharpPost> retVal = new List<ChanSharpPost>();
-			retVal.Add(Topic);
-			retVal.AddRange(Replies);
-
-			return retVal.ToArray();
+			// If there are no replies, return the topic as a single element array
+			if (Replies == null)
+			{
+				return new ChanSharpPost[] { Topic };
+			}
+			// Else add the Topic and Replies to a list of posts and return it as an array
+			else
+			{
+				List<ChanSharpPost> retVal = new List<ChanSharpPost>();
+				retVal.Add(Topic);
+				retVal.AddRange(Replies);
+				return retVal.ToArray();
+			}
 		}
 
 
@@ -355,13 +380,24 @@ namespace ChanSharp
 
 		private ChanSharpFile[] Files_get()
 		{
-			List<ChanSharpFile> retVal = new List<ChanSharpFile>();
+			// If the thread only has the OP, check if it has a file, if it does, return a single element array 
+			// Containing that file, if it doesnt, return null
+			if (this.Posts.Length == 1)
+			{
+				if (this.Posts[0].HasFile) { return new ChanSharpFile[] { this.Posts[0].File }; }
+				return null;
+			}
 
+			// Else, the thread has an OP and 1 or more replies, itterate over each of them 
+			// And if they have a file, add it to the list
+			List<ChanSharpFile> retVal = new List<ChanSharpFile>();
 			foreach (ChanSharpPost post in this.Posts)
 			{
 				if (post.HasFile) { retVal.Add(post.File); }
 			}
 
+			// If no files could be found, return null, else return the files as an array
+			if (retVal.Count == 0) { return null; }
 			return retVal.ToArray();
 		}
 
