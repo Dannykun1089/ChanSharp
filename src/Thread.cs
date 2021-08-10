@@ -216,15 +216,14 @@ namespace ChanSharp
 
 			if (LastModified != null)
 			{
-			
+				RequestsClient.DefaultRequestHeaders.IfModifiedSince = LastModified;
 			}
 
 			// Random connection errors, return 0 and try again later
 			HttpResponseMessage resp;
 			try
 			{
-				RequestsClient.DefaultRequestHeaders.IfModifiedSince = LastModified;
-				resp = RequestsClient.GetAsync( UrlGenerator.ThreadApiUrl(ID)).Result;
+				resp = RequestsClient.GetAsync( UrlGenerator.ThreadApiUrl(ID) ).Result;
 			}
 			catch
 			{
@@ -256,13 +255,14 @@ namespace ChanSharp
 
 					int originalPostCount = Replies.Length;
 
-					JToken[] posts = JObject.Parse( resp.Content.ReadAsStringAsync().Result ).Value<JToken[]>("posts");
+					JToken[] posts = JObject.Parse( resp.Content.ReadAsStringAsync().Result ).Value<JArray>("posts").ToObject<JToken[]>();
 
 					this.Topic         = new ChanSharpPost(this, posts[0]);
 					this.WantUpdate    = false;
 					this.OmittedImages = 0;
 					this.OmittedPosts  = 0;
-					this.LastModified  = DateTime.Parse( resp.Headers.GetValues("Last-Modified").First() );
+					Console.WriteLine(resp.Content.Headers.LastModified);
+					this.LastModified = resp.Content.Headers.LastModified.Value.UtcDateTime;
 
 					if (this.LastReplyID > 0 && !force)
 					{
@@ -306,6 +306,7 @@ namespace ChanSharp
 		}
 
 
+		// Updates the thread to include all posts
 		public void Expand()
 		{
 			if (OmittedPosts > 0) { Update(); }
