@@ -4,7 +4,6 @@ using System.Net.Http;
 using System.Linq;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
-using System.Net.Http.Headers;
 
 namespace ChanSharp
 {
@@ -132,13 +131,13 @@ namespace ChanSharp
 				}
 			}
 
-			retVal.ID = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
+			retVal.ID = firstPostJson.ContainsKey("no") ?  firstPostJson.Value<int>("no") : threadID;
 			retVal.Topic = new ChanSharpPost(retVal, firstPostJson);
-			retVal.Replies = replies == null ? null : replies.ToArray();
+			retVal.Replies = replies?.ToArray();
 			retVal.ReplyCount = firstPostJson.Value<int>("replies");
 			retVal.ImageCount = firstPostJson.Value<int>("images");
-			retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
-			retVal.OmittedPosts = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
+			retVal.OmittedImages = firstPostJson.ContainsKey("omitted_images") ? firstPostJson.Value<int>("omitted_images") : 0;
+			retVal.OmittedPosts = firstPostJson.ContainsKey("omitted_posts") ? firstPostJson.Value<int>("omitted_posts") : 0;
 			retVal.LastModified = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
 
 			// If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
@@ -179,13 +178,13 @@ namespace ChanSharp
 				}
 			}
 
-			retVal.ID = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
+			retVal.ID = firstPostJson.ContainsKey("no") ? firstPostJson.Value<int>("no") : threadID;
 			retVal.Topic = new ChanSharpPost(retVal, firstPostJson);
-			retVal.Replies = replies == null ? null : replies.ToArray();
+			retVal.Replies = replies?.ToArray();
 			retVal.ReplyCount = firstPostJson.Value<int>("replies");
 			retVal.ImageCount = firstPostJson.Value<int>("images");
-			retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
-			retVal.OmittedPosts = firstPostJson["omitted_posts"] == null ? 0 : firstPostJson.Value<int>("omitted_posts");
+			retVal.OmittedImages = firstPostJson.ContainsKey("omitted_images") ? firstPostJson.Value<int>("omitted_images") : 0;
+			retVal.OmittedPosts = firstPostJson.ContainsKey("omitted_posts") ? firstPostJson.Value<int>("omitted_posts") : 0;
 			retVal.LastModified = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
 
 			// If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
@@ -258,7 +257,7 @@ namespace ChanSharp
 					this.WantUpdate    = false;
 					this.OmittedImages = 0;
 					this.OmittedPosts  = 0;
-					this.LastModified = resp.Content.Headers.LastModified.Value.UtcDateTime;
+					this.LastModified  = resp.Content.Headers.LastModified.Value.UtcDateTime;
 
 					if (this.LastReplyID > 0 && !force)
 					{
@@ -367,7 +366,6 @@ namespace ChanSharp
 		}
 
 
-		// Check this please
 		private ChanSharpPost[] AllPosts_get()
 		{
 			Expand();
@@ -402,7 +400,6 @@ namespace ChanSharp
 		private string[] ThumbnailUrls_get()
 		{
 			List<string> retVal = new List<string>();
-
 			foreach (ChanSharpFile file in this.Files)
 			{
 				retVal.Add(file.ThumbnailUrl);
