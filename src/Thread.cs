@@ -111,13 +111,12 @@ namespace ChanSharp
 
 		public static ChanSharpThread FromJson(JObject threadJson, ChanSharpBoard board, int threadID = 0, string lastModified = null)
 		{
-			// ERR TO BE FIXED - Single-post threads are counting the first post in the replies 
 			ChanSharpThread retVal = new ChanSharpThread(board, threadID);
 
 			JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
 			JObject firstPostJson = JObject.FromObject(postsJson[0]);
 			JToken[] repliesJson;
-			List<ChanSharpPost> replies; 
+			List<ChanSharpPost> replies;
 			if (postsJson.Length == 1)
 			{
 				repliesJson = null;
@@ -135,7 +134,7 @@ namespace ChanSharp
 
 			retVal.ID = firstPostJson["no"] == null ? threadID : firstPostJson.Value<int>("no");
 			retVal.Topic = new ChanSharpPost(retVal, firstPostJson);
-			retVal.Replies = replies.ToArray();
+			retVal.Replies = replies == null ? null : replies.ToArray();
 			retVal.ReplyCount = firstPostJson.Value<int>("replies");
 			retVal.ImageCount = firstPostJson.Value<int>("images");
 			retVal.OmittedImages = firstPostJson["omitted_images"] == null ? 0 : firstPostJson.Value<int>("omitted_images");
@@ -159,8 +158,6 @@ namespace ChanSharp
 		//Overload for instances where threadJson is a JToken
 		public static ChanSharpThread FromJson(JToken threadJson, ChanSharpBoard board, int threadID = 0, string lastModified = null)
 		{
-			Console.WriteLine($"Called for thread { threadJson["posts"][0].Value<int>("no") }");
-			// ERR TO BE FIXED - Single-post threads are counting the first post in the replies 
 			ChanSharpThread retVal = new ChanSharpThread(board, threadID);
 
 			JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
