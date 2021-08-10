@@ -261,7 +261,6 @@ namespace ChanSharp
 					this.WantUpdate    = false;
 					this.OmittedImages = 0;
 					this.OmittedPosts  = 0;
-					Console.WriteLine(resp.Content.Headers.LastModified);
 					this.LastModified = resp.Content.Headers.LastModified.Value.UtcDateTime;
 
 					if (this.LastReplyID > 0 && !force)
