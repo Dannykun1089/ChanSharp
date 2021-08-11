@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Net.Http;
-using Newtonsoft.Json.Linq;
 
 namespace ChanSharp
 {
+    using Extensions;
+
     internal class Util
     {
         public static string CleanCommentBody(string htmlComment)
@@ -24,13 +24,13 @@ namespace ChanSharp
             JObject retVal = new JObject();
 
             // Read the json response content into a JObject 
-            JObject respAsJson = JObject.Parse(resp.Content.ReadAsStringAsync().Result);
+            JObject responseJson = JObject.Parse( resp.Content.ReadAsString() );
 
             // Iterate over each of the boards
-            foreach (JToken board in respAsJson["boards"])
+            foreach (JToken boardJson in responseJson["boards"])
             {
                 // Add the board data as a value in a key value pair under its own name, E.G. 'a': { 'board': 'a', ... }
-                retVal.Add((string)board["board"], board);
+                retVal.Add( boardJson.Value<string>("board"), boardJson );
             }
 
             // Return the return value
@@ -39,7 +39,7 @@ namespace ChanSharp
 
         public static JObject[] JTokenArrayToJObjectArray(JToken[] jtokenArray)
         {
-            JObject[] retVal = new JObject[ jtokenArray.Length ];
+            JObject[] retVal = new JObject[jtokenArray.Length];
 
             for (int i = 0; i < retVal.Length; i++)
             {
@@ -51,6 +51,13 @@ namespace ChanSharp
         public static byte[] Base64Decode(string b64String)
         {
             return Convert.FromBase64String(b64String);
+        }
+
+
+        // Neater looking version of the ArraySegment method
+        public static T[] SliceArray<T>(T[] original, int offset)
+        {
+            return new ArraySegment<T>(original, offset, original.Length - offset).Array;
         }
     }
 }

@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Net.Http;
 
 namespace Extensions
 {
@@ -11,6 +9,20 @@ namespace Extensions
         public static bool ContainsKey(this JToken jt, string key)
         {
             return jt[key] != null;
+        }
+
+
+        // HttpContent Extension Methods
+        public static string ReadAsString(this HttpContent content)
+        {
+            return content.ReadAsStringAsync().Result;
+        }
+
+
+        // HttpClient Extension Methods
+        public static HttpResponseMessage Get(this HttpClient cli, string url)
+        {
+            return cli.GetAsync(url).Result;
         }
     }
 }

@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
+using System;
 
 namespace ChanSharp
 {
@@ -12,29 +11,29 @@ namespace ChanSharp
 
         private UrlGenerator UrlGenerator { get; set; }
 
-        public ChanSharpBoard  Board        { get; set; }
-        public ChanSharpThread Thread       { get; set; }
+        public Board Board { get; set; }
+        public ChanSharpThread Thread { get; set; }
 
-        public  int            ID           { get => ID_get();           }
-        public  int            PosterID     { get => PosterID_get();     }
-        public  string         Name         { get => Name_get();         }
-        public  string         EMail        { get => Email_get();        }
-        public  string         Tripcode     { get => Tripcode_get();     }
-        public  string         Subject      { get => Subject_get();      }
-        public  string         HTMLComment  { get => HTMLComment_get();  }
-        public  string         TextComment  { get => TextComment_get();  }
-        public  string         Comment      { get => Comment_get();      }
-        public  bool           IsOp         { get => IsOp_get();         }
-        public  bool           Spoiler      { get => Spoiler_get();      }
-        public  int            Timestamp    { get => Timestamp_get();    }
-        public  DateTime       DateTime     { get => DateTime_get();     }
-        public  ChanSharpFile  File         { get => File_get();         }
-        public  bool           HasFile      { get => HasFile_get();      }
-        public  string         Url          { get => Url_get();          }
-        public  string         SemanticSlug { get => SemanticSlug_get(); }
-        public  string         SemanticUrl  { get => SemanticUrl_get();  }
+        public int ID { get => ID_get(); }
+        public int PosterID { get => PosterID_get(); }
+        public string Name { get => Name_get(); }
+        public string EMail { get => Email_get(); }
+        public string Tripcode { get => Tripcode_get(); }
+        public string Subject { get => Subject_get(); }
+        public string HTMLComment { get => HTMLComment_get(); }
+        public string TextComment { get => TextComment_get(); }
+        public string Comment { get => Comment_get(); }
+        public bool IsOp { get => IsOp_get(); }
+        public bool Spoiler { get => Spoiler_get(); }
+        public int Timestamp { get => Timestamp_get(); }
+        public DateTime DateTime { get => DateTime_get(); }
+        public ChanSharpFile File { get => File_get(); }
+        public bool HasFile { get => HasFile_get(); }
+        public string Url { get => Url_get(); }
+        public string SemanticSlug { get => SemanticSlug_get(); }
+        public string SemanticUrl { get => SemanticUrl_get(); }
 
-        public  JObject        Data         { get; set; }
+        public JObject Data { get; set; }
 
 
 
@@ -44,37 +43,37 @@ namespace ChanSharp
 
         public ChanSharpPost(ChanSharpThread thread, JObject data)
         {
-            this.Thread = thread;
+            Thread = thread;
 
-            this.Data = data;
-            this.UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
+            Data = data;
+            UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
         }
 
 
         public ChanSharpPost(string boardName, int threadID, JObject data)
         {
-            this.Thread = new ChanSharpThread(boardName, threadID);
+            Thread = new ChanSharpThread(boardName, threadID);
 
-            this.Data = data;
-            this.UrlGenerator = new UrlGenerator(this.Thread.Board.Name, this.Thread.Board.Https);
+            Data = data;
+            UrlGenerator = new UrlGenerator(Thread.Board.Name, Thread.Board.Https);
         }
 
 
         public ChanSharpPost(ChanSharpThread thread, JToken data)
         {
-            this.Thread = thread;
+            Thread = thread;
 
-            this.Data = JObject.FromObject(data);
-            this.UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
+            Data = JObject.FromObject(data);
+            UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
         }
 
 
         public ChanSharpPost(string boardName, int threadID, JToken data)
         {
-            this.Thread = new ChanSharpThread(boardName, threadID);
+            Thread = new ChanSharpThread(boardName, threadID);
 
-            this.Data = JObject.FromObject(data);
-            this.UrlGenerator = new UrlGenerator(this.Thread.Board.Name, this.Thread.Board.Https);
+            Data = JObject.FromObject(data);
+            UrlGenerator = new UrlGenerator(Thread.Board.Name, Thread.Board.Https);
         }
 
 
@@ -86,10 +85,10 @@ namespace ChanSharp
         public override string ToString()
         {
             return String.Format("<Post /{0}/{1}#{2}, has_file: {3}>",
-                this.Thread.Board.Name,
-                this.Thread.ID,
-                this.ID,
-                this.HasFile ? "true" : "false");
+                Thread.Board.Name,
+                Thread.ID,
+                ID,
+                HasFile ? "true" : "false");
         }
 
 
@@ -118,7 +117,7 @@ namespace ChanSharp
 
         private string Email_get()
         {
-            return Data.Value<string>("email"); 
+            return Data.Value<string>("email");
         }
 
 
@@ -155,7 +154,7 @@ namespace ChanSharp
 
         private bool IsOp_get()
         {
-            return this.ID == Thread.Topic.ID;
+            return ID == Thread.Topic.ID;
         }
 
 
@@ -181,7 +180,7 @@ namespace ChanSharp
 
         private ChanSharpFile File_get()
         {
-            return this.HasFile ? new ChanSharpFile(this) : null; 
+            return HasFile ? new ChanSharpFile(this) : null;
         }
 
 
@@ -191,9 +190,9 @@ namespace ChanSharp
         }
 
 
-        private string Url_get() 
+        private string Url_get()
         {
-            return $"{ this.Thread.Url }#p{ this.ID }";
+            return $"{ Thread.Url }#p{ ID }";
         }
 
 
@@ -205,7 +204,7 @@ namespace ChanSharp
 
         private string SemanticUrl_get()
         {
-            return $"{ this.Thread.SemanticUrl }#p{ this.ID }";
+            return $"{ Thread.SemanticUrl }#p{ ID }";
         }
     }
 }

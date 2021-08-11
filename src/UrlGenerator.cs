@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 
 namespace ChanSharp
 {
@@ -92,7 +91,7 @@ namespace ChanSharp
         public string ThumbUrls(string tim)
         {
             return string.Format(Urls["data"].Value<string>("thumbs"),
-                                  this.BoardName,
+                                  BoardName,
                                   tim);
         }
 
