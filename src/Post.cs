@@ -3,7 +3,7 @@ using System;
 
 namespace ChanSharp
 {
-    public class ChanSharpPost
+    public class Post
     {
         //////////////////////
         ///   Properties   ///
@@ -12,7 +12,7 @@ namespace ChanSharp
         private UrlGenerator UrlGenerator { get; set; }
 
         public Board Board { get; set; }
-        public ChanSharpThread Thread { get; set; }
+        public Thread Thread { get; set; }
 
         public int ID { get => ID_get(); }
         public int PosterID { get => PosterID_get(); }
@@ -27,7 +27,7 @@ namespace ChanSharp
         public bool Spoiler { get => Spoiler_get(); }
         public int Timestamp { get => Timestamp_get(); }
         public DateTime DateTime { get => DateTime_get(); }
-        public ChanSharpFile File { get => File_get(); }
+        public File File { get => File_get(); }
         public bool HasFile { get => HasFile_get(); }
         public string Url { get => Url_get(); }
         public string SemanticSlug { get => SemanticSlug_get(); }
@@ -41,7 +41,7 @@ namespace ChanSharp
         ///   Constructors   ///
         ////////////////////////
 
-        public ChanSharpPost(ChanSharpThread thread, JObject data)
+        public Post(Thread thread, JObject data)
         {
             Thread = thread;
 
@@ -50,16 +50,16 @@ namespace ChanSharp
         }
 
 
-        public ChanSharpPost(string boardName, int threadID, JObject data)
+        public Post(string boardName, int threadID, JObject data)
         {
-            Thread = new ChanSharpThread(boardName, threadID);
+            Thread = new Thread(boardName, threadID);
 
             Data = data;
             UrlGenerator = new UrlGenerator(Thread.Board.Name, Thread.Board.Https);
         }
 
 
-        public ChanSharpPost(ChanSharpThread thread, JToken data)
+        public Post(Thread thread, JToken data)
         {
             Thread = thread;
 
@@ -68,9 +68,9 @@ namespace ChanSharp
         }
 
 
-        public ChanSharpPost(string boardName, int threadID, JToken data)
+        public Post(string boardName, int threadID, JToken data)
         {
-            Thread = new ChanSharpThread(boardName, threadID);
+            Thread = new Thread(boardName, threadID);
 
             Data = JObject.FromObject(data);
             UrlGenerator = new UrlGenerator(Thread.Board.Name, Thread.Board.Https);
@@ -178,9 +178,9 @@ namespace ChanSharp
         }
 
 
-        private ChanSharpFile File_get()
+        private File File_get()
         {
-            return HasFile ? new ChanSharpFile(this) : null;
+            return HasFile ? new File(this) : null;
         }
 
 

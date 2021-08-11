@@ -4,7 +4,7 @@ using System.Net.Http;
 
 namespace ChanSharp
 {
-    public class ChanSharpFile
+    public class File
     {
         //////////////////////
         ///   Properties   ///
@@ -15,8 +15,8 @@ namespace ChanSharp
         private UrlGenerator UrlGenerator { get; }
 
         public Board Board { get; set; }
-        public ChanSharpThread Thread { get; set; }
-        public ChanSharpPost Post { get; set; }
+        public Thread Thread { get; set; }
+        public Post Post { get; set; }
 
         public string FileName { get => FileName_get(); }
         public string FileNameFull { get => FileNameFull_get(); }
@@ -44,7 +44,7 @@ namespace ChanSharp
         ///   Constructors   ///
         ////////////////////////
 
-        public ChanSharpFile(ChanSharpPost post)
+        public File(Post post)
         {
             Post = post;
             Thread = post.Thread;

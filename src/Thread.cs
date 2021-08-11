@@ -9,7 +9,7 @@ namespace ChanSharp
 {
     using Extensions;
 
-    public class ChanSharpThread
+    public class Thread
     {
         //////////////////////
         ///   Properties   ///
@@ -32,11 +32,11 @@ namespace ChanSharp
         public int ImageCount { get; set; }
         public int OmittedPosts { get; set; }
         public int OmittedImages { get; set; }
-        public ChanSharpPost Topic { get; set; }
-        public ChanSharpPost[] Replies { get; set; }
-        public ChanSharpPost[] Posts { get => Posts_get(); }
-        public ChanSharpPost[] AllPosts { get => AllPosts_get(); }
-        public ChanSharpFile[] Files { get => Files_get(); }
+        public Post Topic { get; set; }
+        public Post[] Replies { get; set; }
+        public Post[] Posts { get => Posts_get(); }
+        public Post[] AllPosts { get => AllPosts_get(); }
+        public File[] Files { get => Files_get(); }
         public string[] ThumbnailUrls { get => ThumbnailUrls_get(); }
         public string Url { get => Url_get(); }
         public string SemanticSlug { get => SemanticSlug_get(); }
@@ -52,7 +52,7 @@ namespace ChanSharp
         ///   Constructors   ///
         ////////////////////////
 
-        public ChanSharpThread(Board board, int threadID)
+        public Thread(Board board, int threadID)
         {
             Board = board;
 
@@ -72,7 +72,7 @@ namespace ChanSharp
         }
 
 
-        public ChanSharpThread(string boardName, int threadID)
+        public Thread(string boardName, int threadID)
         {
             Board = new Board(boardName);
 
@@ -100,7 +100,7 @@ namespace ChanSharp
         // These are the methods used to properly fill out the object
 
         // From a request to http(s)://a.4cdn.org/{board}/thread/{threadId}.json
-        public static ChanSharpThread FromRequest(string boardName, HttpResponseMessage resp, int threadId = 0)
+        public static Thread FromRequest(string boardName, HttpResponseMessage resp, int threadId = 0)
         {
             // Ensure the request is ok
             if (resp.StatusCode == HttpStatusCode.NotFound) { return null; }
@@ -114,16 +114,16 @@ namespace ChanSharp
         }
 
 
-        public static ChanSharpThread FromJson(JObject threadJson, Board board, int threadID = 0, DateTime? lastModified = null)
+        public static Thread FromJson(JObject threadJson, Board board, int threadID = 0, DateTime? lastModified = null)
         {
-            ChanSharpThread newThread = new ChanSharpThread(board, threadID);
+            Thread newThread = new Thread(board, threadID);
 
             JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
             JObject firstPostJson = JObject.FromObject(postsJson[0]);
             JToken[] repliesJson;
 
             // If the postsJson length is 1, only the OP is present, and there are no replies
-            List<ChanSharpPost> replies = new List<ChanSharpPost>();
+            List<Post> replies = new List<Post>();
             if (postsJson.Length == 1)
             {
                 replies = null;
@@ -135,12 +135,12 @@ namespace ChanSharp
                 repliesJson = Util.SliceArray(postsJson, 1);
                 foreach (JObject reply in repliesJson)
                 {
-                    replies.Add(new ChanSharpPost(newThread, reply));
+                    replies.Add(new Post(newThread, reply));
                 }
             }
 
             newThread.ID = firstPostJson.Value<int?>("no") ?? threadID;
-            newThread.Topic = new ChanSharpPost(newThread, firstPostJson);
+            newThread.Topic = new Post(newThread, firstPostJson);
             newThread.Replies = replies?.ToArray();
             newThread.ReplyCount = firstPostJson.Value<int>("replies");
             newThread.ImageCount = firstPostJson.Value<int>("images");
@@ -163,14 +163,14 @@ namespace ChanSharp
 
 
         //Overload for instances where threadJson is a JToken
-        public static ChanSharpThread FromJson(JToken threadJson, Board board, int threadID = 0, string lastModified = null)
+        public static Thread FromJson(JToken threadJson, Board board, int threadID = 0, string lastModified = null)
         {
-            ChanSharpThread retVal = new ChanSharpThread(board, threadID);
+            Thread retVal = new Thread(board, threadID);
 
             JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
             JObject firstPostJson = JObject.FromObject(postsJson[0]);
             JToken[] repliesJson;
-            List<ChanSharpPost> replies;
+            List<Post> replies;
             if (postsJson.Length == 1)
             {
                 repliesJson = null;
@@ -179,15 +179,15 @@ namespace ChanSharp
             else
             {
                 repliesJson = new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array;
-                replies = new List<ChanSharpPost>();
+                replies = new List<Post>();
                 foreach (JObject reply in repliesJson)
                 {
-                    replies.Add(new ChanSharpPost(retVal, reply));
+                    replies.Add(new Post(retVal, reply));
                 }
             }
 
             retVal.ID = firstPostJson.ContainsKey("no") ? firstPostJson.Value<int>("no") : threadID;
-            retVal.Topic = new ChanSharpPost(retVal, firstPostJson);
+            retVal.Topic = new Post(retVal, firstPostJson);
             retVal.Replies = replies?.ToArray();
             retVal.ReplyCount = firstPostJson.Value<int>("replies");
             retVal.ImageCount = firstPostJson.Value<int>("images");
@@ -261,7 +261,7 @@ namespace ChanSharp
 
                     JToken[] posts = JObject.Parse(resp.Content.ReadAsStringAsync().Result).Value<JArray>("posts").ToObject<JToken[]>();
 
-                    Topic = new ChanSharpPost(this, posts[0]);
+                    Topic = new Post(this, posts[0]);
                     WantUpdate = false;
                     OmittedImages = 0;
                     OmittedPosts = 0;
@@ -270,10 +270,10 @@ namespace ChanSharp
                     if (LastReplyID > 0 && !force)
                     {
                         // Add the new replies to a list
-                        List<ChanSharpPost> newReplies = new List<ChanSharpPost> { };
+                        List<Post> newReplies = new List<Post> { };
                         foreach (JToken post in posts)
                         {
-                            if (post.Value<int>("no") > LastReplyID) { newReplies.Add(new ChanSharpPost(this, post)); }
+                            if (post.Value<int>("no") > LastReplyID) { newReplies.Add(new Post(this, post)); }
                         }
 
                         // Insert the old replies before the new replies
@@ -284,10 +284,10 @@ namespace ChanSharp
                     else
                     {
                         // Add all the posts to a list
-                        List<ChanSharpPost> newReplies = new List<ChanSharpPost>();
+                        List<Post> newReplies = new List<Post>();
                         foreach (JToken post in posts)
                         {
-                            newReplies.Add(new ChanSharpPost(this, post));
+                            newReplies.Add(new Post(this, post));
                         }
 
                         // Remove the OP and set the Replies property
@@ -356,17 +356,17 @@ namespace ChanSharp
         }
 
 
-        private ChanSharpPost[] Posts_get()
+        private Post[] Posts_get()
         {
             // If there are no replies, return the topic as a single element array
             if (Replies == null)
             {
-                return new ChanSharpPost[] { Topic };
+                return new Post[] { Topic };
             }
             // Else add the Topic and Replies to a list of posts and return it as an array
             else
             {
-                List<ChanSharpPost> retVal = new List<ChanSharpPost>();
+                List<Post> retVal = new List<Post>();
                 retVal.Add(Topic);
                 retVal.AddRange(Replies);
                 return retVal.ToArray();
@@ -374,27 +374,27 @@ namespace ChanSharp
         }
 
 
-        private ChanSharpPost[] AllPosts_get()
+        private Post[] AllPosts_get()
         {
             Expand();
             return Posts;
         }
 
 
-        private ChanSharpFile[] Files_get()
+        private File[] Files_get()
         {
             // If the thread only has the OP, check if it has a file, if it does, return a single element array 
             // Containing that file, if it doesnt, return null
             if (Posts.Length == 1)
             {
-                if (Posts[0].HasFile) { return new ChanSharpFile[] { Posts[0].File }; }
+                if (Posts[0].HasFile) { return new File[] { Posts[0].File }; }
                 return null;
             }
 
             // Else, the thread has an OP and 1 or more replies, itterate over each of them 
             // And if they have a file, add it to the list
-            List<ChanSharpFile> retVal = new List<ChanSharpFile>();
-            foreach (ChanSharpPost post in Posts)
+            List<File> retVal = new List<File>();
+            foreach (Post post in Posts)
             {
                 if (post.HasFile) { retVal.Add(post.File); }
             }
@@ -408,7 +408,7 @@ namespace ChanSharp
         private string[] ThumbnailUrls_get()
         {
             List<string> retVal = new List<string>();
-            foreach (ChanSharpFile file in Files)
+            foreach (File file in Files)
             {
                 retVal.Add(file.ThumbnailUrl);
             }

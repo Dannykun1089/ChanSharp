@@ -24,7 +24,7 @@ namespace ChanSharp
         public string Protocol { get; }
 
         internal HttpClient RequestsClient { get; }
-        internal Dictionary<int, ChanSharpThread> ThreadCache { get; }
+        internal Dictionary<int, Thread> ThreadCache { get; }
 
 
 
@@ -41,7 +41,7 @@ namespace ChanSharp
             UrlGenerator = new UrlGenerator(boardName, https);
 
             RequestsClient = session ?? new HttpClient();
-            ThreadCache = new Dictionary<int, ChanSharpThread>();
+            ThreadCache = new Dictionary<int, Thread>();
 
             RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
         }
@@ -186,7 +186,7 @@ namespace ChanSharp
         }
 
 
-        private ChanSharpThread[] RequestThreads(string url)
+        private Thread[] RequestThreads(string url)
         {
             // Request the url and turn the Json response into a JToken
             JToken Json = GetJson(url);
@@ -204,7 +204,7 @@ namespace ChanSharp
             }
 
             // Go over each thread Json object
-            List<ChanSharpThread> threads = new List<ChanSharpThread>();
+            List<Thread> threads = new List<Thread>();
             foreach (JToken threadJson in threadList)
             {
                 // Get the thread ID
@@ -212,7 +212,7 @@ namespace ChanSharp
 
                 // If the thread ID is in the cache, retrieve it from the cache and set WantUpdate to true
                 // Else, create a new thread object from the Json data and add it to the cache
-                ChanSharpThread newThread;
+                Thread newThread;
                 if (ThreadCache.ContainsKey(id))
                 {
                     newThread = ThreadCache[id];
@@ -220,7 +220,7 @@ namespace ChanSharp
                 }
                 else
                 {
-                    newThread = ChanSharpThread.FromJson(threadJson, this, id, threadJson.Value<string>("last_modified"));
+                    newThread = Thread.FromJson(threadJson, this, id, threadJson.Value<string>("last_modified"));
                     ThreadCache.Add(id, newThread);
                 }
 
@@ -238,10 +238,10 @@ namespace ChanSharp
         ///   Public Instance Methods   ///
         ///////////////////////////////////
 
-        public ChanSharpThread GetThread(int threadID, bool updateIfCached = true, bool raise404 = false)
+        public Thread GetThread(int threadID, bool updateIfCached = true, bool raise404 = false)
         {
             // Attempt to get cached thread
-            ChanSharpThread cachedThread = ThreadCache.ContainsKey(threadID) ? ThreadCache[threadID] : null;
+            Thread cachedThread = ThreadCache.ContainsKey(threadID) ? ThreadCache[threadID] : null;
 
             // Thread is not cached
             if (cachedThread is null)
@@ -260,7 +260,7 @@ namespace ChanSharp
                 }
 
                 // Get the thread from the request and insert it into the thread cache
-                ChanSharpThread newThread = ChanSharpThread.FromRequest(Name, resp, threadID);
+                Thread newThread = Thread.FromRequest(Name, resp, threadID);
                 ThreadCache.Add(threadID, newThread);
 
                 // Dispose of the request and return the thread
@@ -280,19 +280,19 @@ namespace ChanSharp
         }
 
 
-        public ChanSharpThread[] GetThreads(int page = 1)
+        public Thread[] GetThreads(int page = 1)
         {
             string url = UrlGenerator.PageUrls(page);
             return RequestThreads(url);
         }
 
 
-        public ChanSharpThread[] GetAllThreads(bool expand = false)
+        public Thread[] GetAllThreads(bool expand = false)
         {
             if (!expand) { return RequestThreads(UrlGenerator.Catalog()); }
 
             // Itterate over all the thread IDs and call this.GetThread() for each of them
-            List<ChanSharpThread> threads = new List<ChanSharpThread>();
+            List<Thread> threads = new List<Thread>();
             foreach (int id in GetAllThreadIDs())
             {
                 threads.Add(GetThread(id));
@@ -328,7 +328,7 @@ namespace ChanSharp
 
         public void RefreshCache(bool ifWantUpdate = false)
         {
-            foreach (ChanSharpThread thread in ThreadCache.Values)
+            foreach (Thread thread in ThreadCache.Values)
             {
                 if (ifWantUpdate)
                 {

@@ -3,7 +3,7 @@ using System.Net.Http;
 
 namespace Extensions
 {
-    public static class Extensions
+    internal static class Extensions
     {
         // JToken Extension Methods
         public static bool ContainsKey(this JToken jt, string key)
