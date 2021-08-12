@@ -12,9 +12,10 @@
     <PackageLicenseExpression></PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Dannykun1089/ChanSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Dannykun1089/ChanSharp.git</RepositoryUrl>
-    <PackageTags>4Chan, 4Channel, Yotsuba</PackageTags>
+    <PackageTags>4Chan, 4Channel, Yotsuba, Api, Wrapper</PackageTags>
     <NeutralLanguage>en</NeutralLanguage>
     <SignAssembly>false</SignAssembly>
+    <Version>0.0.3</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
