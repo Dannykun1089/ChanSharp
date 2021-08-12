@@ -63,34 +63,32 @@ namespace ChanSharp
         ///   Type Methods   ///
         ////////////////////////
 
-        public static Dictionary<string, Board> GetBoards(string[] boardNameList, bool https = true, HttpClient session = null)
+        public static Dictionary<string, Board> GetBoards(string[] boardNames, bool https = true, HttpClient session = null)
         {
-            Dictionary<string, Board> retVal = new Dictionary<string, Board>();
-
+            Dictionary<string, Board> boards = new Dictionary<string, Board>();
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
-            foreach (string newBoardName in boardNameList)
+            foreach (string boardName in boardNames)
             {
-                retVal.Add( newBoardName, new Board(newBoardName, https, session) );
+                boards.Add( boardName, new Board(boardName, https, session) );
             }
 
             // Return the dictionary
-            return retVal;
+            return boards;
         }
 
 
         // System.Collections.Generic.List<string> overload
-        public static Dictionary<string, Board> GetBoards(List<string> boardNameList, bool https = true, HttpClient session = null)
+        public static Dictionary<string, Board> GetBoards(List<string> boardNames, bool https = true, HttpClient session = null)
         {
-            Dictionary<string, Board> retVal = new Dictionary<string, Board>();
-
+            Dictionary<string, Board> boards = new Dictionary<string, Board>();
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
-            foreach (string newBoardName in boardNameList)
+            foreach (string boardName in boardNames)
             {
-                retVal.Add( newBoardName, new Board(newBoardName, https, session) );
+                boards.Add( boardName, new Board(boardName, https, session) );
             }
 
             // Return the dictionary
-            return retVal;
+            return boards;
         }
 
 
@@ -99,17 +97,19 @@ namespace ChanSharp
             // Request a list of all boards from 4Chan
             HttpClient requestsClient = session ?? new HttpClient();
             UrlGenerator urlGenerator = new UrlGenerator(null);
+            requestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
+
             HttpResponseMessage resp  = requestsClient.Get( urlGenerator.BoardList() );
 
             // Parse the response content into a JObject
             string responseContent = resp.Content.ReadAsString();
-            JObject boardsJson = JObject.Parse( responseContent );
+            JObject boardsJson     = JObject.Parse( responseContent );
 
             // Itterate over each board Json and add it's name to the list
             List<string> allBoards = new List<string>();
             foreach (JObject boardJson in boardsJson.Value<JArray>("boards"))
             {
-                allBoards.Add(boardJson.Value<string>("board"));
+                allBoards.Add( boardJson.Value<string>("board") );
             }
 
             // pass the list of all the boards into the GetBoards method
@@ -122,12 +122,13 @@ namespace ChanSharp
         ///   Private Instance Methods   ///
         ////////////////////////////////////
 
+        // Hits 'http(s)://a.4cdn.org/boards.json' for boards Json data
         private void FetchBoardsMetadata(UrlGenerator urlGenerator)
         {
             // Return if there is already metadata
             if (MetaData != null) { return; }
 
-            // Request the boards.json api data
+            // Request the boards.json api data and ensure success
             HttpResponseMessage resp = RequestsClient.Get( urlGenerator.BoardList() );
             resp.EnsureSuccessStatusCode();
 
@@ -139,13 +140,15 @@ namespace ChanSharp
         }
 
 
+        // Get boards data and return the metadata specified as a JToken, null if not present
         private JToken GetMetaData(string key)
         {
             FetchBoardsMetadata(UrlGenerator);
-            return MetaData[Name][key];
+            return MetaData[Name].Value<JToken>(key);
         }
 
 
+        // Hits the url specified for a Json response, return it as a JToken
         private JToken GetJson(string url)
         {
             // Send request to the url, ensure successfull status code
@@ -158,57 +161,63 @@ namespace ChanSharp
         }
 
 
+        // Takes in the /{board}/catalog.json Json data as a JArray and reconstructs it
+        // Into a format more similar to /{board}/threads.json [NOTE: INSERT FORMAT DEFINITION]
         private JArray CatalogToThreads(JArray catalogJson)
         {
             JArray threadsList = new JArray();
-
-            // Reconstruct the catalog.json into [INSERT FORMAT DEFINITION HERE]
-            foreach (JToken page in catalogJson)
+            foreach (JToken pageJson in catalogJson)
             {
-                foreach (JObject thread in page.Value<JArray>("threads"))
-                {
+                foreach (JObject threadJson in pageJson.Value<JArray>("threads"))
+                { 
                     JArray posts;
-                    if ( thread.ContainsKey("last_replies") )
+                    if ( threadJson.ContainsKey("last_replies") )
                     {
-                        posts = thread.Value<JArray>("last_replies");
-                        thread.Remove("last_replies");
-                        posts.Insert(0, thread);
+                        posts = threadJson.Value<JArray>("last_replies");
+                        threadJson.Remove("last_replies");
+                        posts.Insert(0, threadJson);
                     }
                     else
                     {
-                        posts = new JArray(thread);
+                        posts = new JArray(threadJson);
                     }
-                    threadsList.Add(JToken.Parse($"{{ 'posts': { posts } }}"));
+                    threadsList["posts"] = posts;
                 }
             }
-
             return threadsList;
         }
 
 
+        // Attempts to obtain an array of ChanSharp.Thread objects from a valid Api Url
+        // ( {board}/catalog.json OR {board}/{pageNum}.json )
         private Thread[] RequestThreads(string url)
         {
             // Request the url and turn the Json response into a JToken
             JToken Json = GetJson(url);
 
-            // If the Url is a catalog url, call the catalogToThreads method
-            // Else get it from the 'threads' Json propperty
+            // If the Url is a catalog url, call the CatalogToThreads() method
+            // Else, the url is a page url, obtain it from the 'threads' token
             JArray threadList;
             if (url == UrlGenerator.Catalog())
             {
-                threadList = CatalogToThreads(JArray.FromObject(Json));
+                threadList = CatalogToThreads( JArray.FromObject(Json) );
             }
             else
             {
-                threadList = JArray.FromObject(Json["threads"]);
+                threadList = JArray.FromObject( Json["threads"] );
             }
 
             // Go over each thread Json object
             List<Thread> threads = new List<Thread>();
-            foreach (JToken threadJson in threadList)
+            foreach (JObject threadJson in threadList)
             {
-                // Get the thread ID
+                // Get the thread ID and lastModified values
                 int id = threadJson["posts"][0].Value<int>("no");
+                DateTimeOffset? lastModified = null;
+                if (threadJson.ContainsKey("last_modified"))
+                {
+                    lastModified = DateTimeOffset.FromUnixTimeSeconds( threadJson.Value<long>("last_modified") );
+                }
 
                 // If the thread ID is in the cache, retrieve it from the cache and set WantUpdate to true
                 // Else, create a new thread object from the Json data and add it to the cache
@@ -220,14 +229,12 @@ namespace ChanSharp
                 }
                 else
                 {
-                    newThread = Thread.FromJson(threadJson, this, id, threadJson.Value<string>("last_modified"));
+                    newThread = Thread.FromJson(threadJson, this, id, lastModified);
                     ThreadCache.Add(id, newThread);
                 }
-
                 // Add the new thread to the list
                 threads.Add(newThread);
             }
-
             // Return the list as an array
             return threads.ToArray();
         }

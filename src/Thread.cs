@@ -44,7 +44,7 @@ namespace ChanSharp
         public int CustomSpoilers { get => CustomSpoilers_get(); }
         public bool WantUpdate { get; set; }
         public int LastReplyID { get; set; }
-        public DateTime LastModified { get; set; }
+        public DateTimeOffset LastModified { get; set; }
 
 
 
@@ -64,7 +64,7 @@ namespace ChanSharp
             Replies = null;
             LastReplyID = 0;
             WantUpdate = false;
-            LastModified = DateTime.MinValue;
+            LastModified = DateTimeOffset.FromUnixTimeSeconds( 0 );
 
             RequestsClient = new HttpClient();
             UrlGenerator = new UrlGenerator(board.Name, board.Https);
@@ -84,7 +84,7 @@ namespace ChanSharp
             Replies = null;
             WantUpdate = false;
             LastReplyID = 0;
-            LastModified = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            LastModified = DateTimeOffset.FromUnixTimeSeconds(0);
 
             RequestsClient = new HttpClient();
             UrlGenerator = new UrlGenerator(boardName, Board.Https);
@@ -108,29 +108,24 @@ namespace ChanSharp
 
             // Parse the response content into a JObject and get the Last-Modified value from the content headers
             JObject jsonContent = JObject.Parse(resp.Content.ReadAsString());
-            DateTime lastModified = resp.Content.Headers.LastModified.Value.UtcDateTime;
+            DateTimeOffset lastModified = resp.Content.Headers.LastModified.Value;
 
             return FromJson(jsonContent, new Board(boardName), threadId, lastModified);
         }
 
 
-        public static Thread FromJson(JObject threadJson, Board board, int threadID = 0, DateTime? lastModified = null)
+        public static Thread FromJson(JObject threadJson, Board board, int threadID = 0, DateTimeOffset? lastModified = null)
         {
             Thread newThread = new Thread(board, threadID);
 
-            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
-            JObject firstPostJson = JObject.FromObject(postsJson[0]);
+            JToken[] postsJson     = threadJson["posts"].ToObject<JToken[]>();
+            JToken   firstPostJson = postsJson[0];
             JToken[] repliesJson;
 
-            // If the postsJson length is 1, only the OP is present, and there are no replies
-            List<Post> replies = new List<Post>();
-            if (postsJson.Length == 1)
-            {
-                replies = null;
-            }
-            // Else, get rid of the first element of postsJson to make repliesJson,
+            // If the postsJson length greater than 1, get rid of the first element of postsJson to make repliesJson,
             // Itterate over each reply Json in repliesJson and add a new Post object to replies
-            else
+            List<Post> replies = new List<Post>();
+            if (postsJson.Length > 1)
             {
                 repliesJson = Util.SliceArray(postsJson, 1);
                 foreach (JObject reply in repliesJson)
@@ -138,15 +133,21 @@ namespace ChanSharp
                     replies.Add(new Post(newThread, reply));
                 }
             }
+            // Else, only the OP is present, and there are no replies
+            else
+            {
+                replies = null;
+            }
 
-            newThread.ID = firstPostJson.Value<int?>("no") ?? threadID;
-            newThread.Topic = new Post(newThread, firstPostJson);
-            newThread.Replies = replies?.ToArray();
-            newThread.ReplyCount = firstPostJson.Value<int>("replies");
-            newThread.ImageCount = firstPostJson.Value<int>("images");
+            // Fill in the thread information from the OP's post Json
+            newThread.ID            = firstPostJson.Value<int?>("no") ?? threadID;
+            newThread.Topic         = new Post(newThread, firstPostJson);
+            newThread.Replies       = replies?.ToArray();
+            newThread.ReplyCount    = firstPostJson.Value<int>("replies");
+            newThread.ImageCount    = firstPostJson.Value<int>("images");
             newThread.OmittedImages = firstPostJson.Value<int?>("omitted_images") ?? 0;
-            newThread.OmittedPosts = firstPostJson.Value<int?>("omitted_posts") ?? 0;
-            newThread.LastModified = lastModified ?? DateTime.MinValue;
+            newThread.OmittedPosts  = firstPostJson.Value<int?>("omitted_posts") ?? 0;
+            newThread.LastModified  = lastModified ?? DateTimeOffset.FromUnixTimeSeconds( 0 );
 
             // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
             if (threadID == 0)
@@ -157,55 +158,56 @@ namespace ChanSharp
             {
                 newThread.LastReplyID = newThread.Replies == null ? newThread.Topic.ID : newThread.Replies.Last().ID;
             }
-
             return newThread;
         }
 
 
         //Overload for instances where threadJson is a JToken
-        public static Thread FromJson(JToken threadJson, Board board, int threadID = 0, string lastModified = null)
+        public static Thread FromJson(JToken threadJson, Board board, int threadID = 0, DateTimeOffset? lastModified = null)
         {
-            Thread retVal = new Thread(board, threadID);
+            Thread newThread = new Thread(board, threadID);
 
-            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
-            JObject firstPostJson = JObject.FromObject(postsJson[0]);
+            JToken[] postsJson     = threadJson["posts"].ToObject<JToken[]>();
+            JToken   firstPostJson = postsJson[0];
             JToken[] repliesJson;
-            List<Post> replies;
-            if (postsJson.Length == 1)
+
+            // If the postsJson length greater than 1, get rid of the first element of postsJson to make repliesJson,
+            // Itterate over each reply Json in repliesJson and add a new Post object to replies
+            List<Post> replies = new List<Post>();
+            if (postsJson.Length > 1)
             {
-                repliesJson = null;
-                replies = null;
-            }
-            else
-            {
-                repliesJson = new ArraySegment<JToken>(postsJson, 1, postsJson.Length - 1).Array;
-                replies = new List<Post>();
+                repliesJson = Util.SliceArray(postsJson, 1);
                 foreach (JObject reply in repliesJson)
                 {
-                    replies.Add(new Post(retVal, reply));
+                    replies.Add( new Post(newThread, reply) );
                 }
             }
+            // Else, only the OP is present, and there are no replies
+            else
+            {
+                replies = null;
+            }
 
-            retVal.ID = firstPostJson.ContainsKey("no") ? firstPostJson.Value<int>("no") : threadID;
-            retVal.Topic = new Post(retVal, firstPostJson);
-            retVal.Replies = replies?.ToArray();
-            retVal.ReplyCount = firstPostJson.Value<int>("replies");
-            retVal.ImageCount = firstPostJson.Value<int>("images");
-            retVal.OmittedImages = firstPostJson.ContainsKey("omitted_images") ? firstPostJson.Value<int>("omitted_images") : 0;
-            retVal.OmittedPosts = firstPostJson.ContainsKey("omitted_posts") ? firstPostJson.Value<int>("omitted_posts") : 0;
-            retVal.LastModified = lastModified == null ? new DateTime(1970, 1, 1, 0, 0, 0, 0) : DateTime.Parse(lastModified);
+            // Fill in the thread information from the OP's post Json
+            newThread.ID            = firstPostJson.Value<int?>("no") ?? threadID;
+            newThread.Topic         = new Post(newThread, firstPostJson);
+            newThread.Replies       = replies?.ToArray();
+            newThread.ReplyCount    = firstPostJson.Value<int>("replies");
+            newThread.ImageCount    = firstPostJson.Value<int>("images");
+            newThread.OmittedImages = firstPostJson.Value<int?>("omitted_images") ?? 0;
+            newThread.OmittedPosts  = firstPostJson.Value<int?>("omitted_posts") ?? 0;
+            newThread.LastModified  = lastModified ?? DateTimeOffset.FromUnixTimeSeconds( 0 );
 
             // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
             if (threadID == 0)
             {
-                retVal.WantUpdate = true;
+                newThread.WantUpdate = true;
             }
             else
             {
-                retVal.LastReplyID = retVal.Replies == null ? retVal.Topic.ID : retVal.Replies.Last().ID;
+                newThread.LastReplyID = newThread.Replies == null ? newThread.Topic.ID : newThread.Replies.Last().ID;
             }
-
-            return retVal;
+            return newThread;
         }
 
 
@@ -265,7 +267,7 @@ namespace ChanSharp
                     WantUpdate = false;
                     OmittedImages = 0;
                     OmittedPosts = 0;
-                    LastModified = resp.Content.Headers.LastModified.Value.UtcDateTime;
+                    LastModified = resp.Content.Headers.LastModified.Value;
 
                     if (LastReplyID > 0 && !force)
                     {

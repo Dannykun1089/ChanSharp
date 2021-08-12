@@ -26,7 +26,7 @@ namespace ChanSharp
         public bool IsOp { get => IsOp_get(); }
         public bool Spoiler { get => Spoiler_get(); }
         public int Timestamp { get => Timestamp_get(); }
-        public DateTime DateTime { get => DateTime_get(); }
+        public DateTimeOffset DateTime { get => DateTime_get(); }
         public File File { get => File_get(); }
         public bool HasFile { get => HasFile_get(); }
         public string Url { get => Url_get(); }
@@ -170,11 +170,9 @@ namespace ChanSharp
         }
 
 
-        private DateTime DateTime_get()
+        private DateTimeOffset DateTime_get()
         {
-            DateTime date = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            date.AddSeconds(Timestamp);
-            return date;
+            return DateTimeOffset.FromUnixTimeSeconds(Timestamp);
         }
 
 
