@@ -15,12 +15,25 @@
     <PackageTags>4Chan, 4Channel, Yotsuba, Api, Wrapper</PackageTags>
     <NeutralLanguage>en</NeutralLanguage>
     <SignAssembly>false</SignAssembly>
-    <Version>0.0.3</Version>
+    <Version>0.0.2</Version>
+    <PackageLicenseFile>Licence.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>true</Optimize>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Licence.txt" />
+    <None Include="Licence.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Licence.txt" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
