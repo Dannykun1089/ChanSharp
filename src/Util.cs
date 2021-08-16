@@ -50,6 +50,7 @@ namespace ChanSharp
 
         public static byte[] Base64Decode(string b64String)
         {
+            if (b64String == null) { return null; }
             return Convert.FromBase64String(b64String);
         }
 
@@ -57,7 +58,17 @@ namespace ChanSharp
         // Neater looking version of the ArraySegment method
         public static T[] SliceArray<T>(T[] original, int offset)
         {
-            return new ArraySegment<T>(original, offset, original.Length - offset).Array;
+            // If index is less than 0 or more than the original array's length, throw out of bounds exception
+            // If index is equal to original's length, return empty array
+            if (offset < 0 || offset > original.Length) { throw new IndexOutOfRangeException(); }
+            if (offset == original.Length) { return Array.Empty<T>(); }
+
+            T[] retVal = new T[original.Length - offset];
+            for (int i = 0; i < retVal.Length; i++)
+            {
+                retVal[i] = original[i + offset];
+            }
+            return retVal;
         }
     }
 }
