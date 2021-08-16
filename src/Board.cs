@@ -20,6 +20,7 @@ namespace ChanSharp
         public bool IsWorksafe { get => IsWorksafe_get(); }
         public int PageCount { get => PageCount_get(); }
         public int ThreadsPerPage { get => ThreadsPerPage_get(); }
+        public int ThreadCount { get => ThreadCount_get(); }
         public bool Https { get; }
         public string Protocol { get; }
 
@@ -377,6 +378,11 @@ namespace ChanSharp
         private int ThreadsPerPage_get()
         {
             return GetMetaData("per_page").ToObject<int>();
+        }
+
+        private int ThreadCount_get()
+        {
+            return this.GetAllThreadIDs().Length;
         }
     }
 }
