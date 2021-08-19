@@ -15,7 +15,7 @@
     <PackageTags>4Chan, 4Channel, Yotsuba, Api, Wrapper</PackageTags>
     <NeutralLanguage>en</NeutralLanguage>
     <SignAssembly>false</SignAssembly>
-    <Version>0.0.2</Version>
+    <Version>0.0.3</Version>
     <PackageLicenseFile>Licence.txt</PackageLicenseFile>
   </PropertyGroup>
 
