@@ -9,8 +9,6 @@ namespace ChanSharp
         ///   Properties   ///
         //////////////////////
 
-        private UrlGenerator UrlGenerator { get; set; }
-
         public Board Board { get; set; }
         public Thread Thread { get; set; }
 
@@ -46,7 +44,6 @@ namespace ChanSharp
             Thread = thread;
 
             Data = data;
-            UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
         }
 
 
@@ -55,7 +52,6 @@ namespace ChanSharp
             Thread = thread;
 
             Data = JObject.FromObject(data);
-            UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
         }
 
 
