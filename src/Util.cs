@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 
 namespace ChanSharp
 {
@@ -8,9 +10,22 @@ namespace ChanSharp
 
     internal class Util
     {
-        public static string CleanCommentBody(string htmlComment)
+        // Some lines excluded due to no percieved usage
+        public static string CleanCommentBody(string HtmlComment)
         {
-            return htmlComment;
+            string retVal = HtmlComment;
+
+            Regex tagPattern = new Regex(@"<.+?>");
+            //Regex linkPattern = new Regex(@"<a [^>]+>(.+?)</a>");
+
+            retVal = retVal.Replace("<br>", "\n");
+            retVal = tagPattern.Replace(retVal, "");
+            //retVal = linkPattern.Replace(retVal, @"\1");
+
+            // Escape misc Html encoded strings
+            retVal = WebUtility.HtmlDecode(retVal);
+
+            return retVal;
         }
 
 
@@ -37,6 +52,7 @@ namespace ChanSharp
             return retVal;
         }
 
+
         public static JObject[] JTokenArrayToJObjectArray(JToken[] jtokenArray)
         {
             JObject[] retVal = new JObject[jtokenArray.Length];
@@ -48,6 +64,7 @@ namespace ChanSharp
             return retVal;
         }
 
+
         public static byte[] Base64Decode(string b64String)
         {
             if (b64String == null) { return null; }
@@ -55,7 +72,7 @@ namespace ChanSharp
         }
 
 
-        // Neater looking version of the ArraySegment method
+        // CSharp be like "haha lets not include native array slicing like python" SCREEEEEEEEE
         public static T[] SliceArray<T>(T[] original, int offset)
         {
             // If index is less than 0 or more than the original array's length, throw out of bounds exception
