@@ -70,7 +70,7 @@ namespace ChanSharp
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
             foreach (string boardName in boardNames)
             {
-                boards.Add( boardName, new Board(boardName, https, session) );
+                boards.Add(boardName, new Board(boardName, https, session));
             }
 
             // Return the dictionary
@@ -85,7 +85,7 @@ namespace ChanSharp
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
             foreach (string boardName in boardNames)
             {
-                boards.Add( boardName, new Board(boardName, https, session) );
+                boards.Add(boardName, new Board(boardName, https, session));
             }
 
             // Return the dictionary
@@ -100,17 +100,17 @@ namespace ChanSharp
             UrlGenerator urlGenerator = new UrlGenerator(null);
             requestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
 
-            HttpResponseMessage resp  = requestsClient.Get( urlGenerator.BoardList() );
+            HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
 
             // Parse the response content into a JObject
             string responseContent = resp.Content.ReadAsString();
-            JObject boardsJson     = JObject.Parse( responseContent );
+            JObject boardsJson = JObject.Parse(responseContent);
 
             // Itterate over each board Json and add it's name to the list
             List<string> allBoards = new List<string>();
             foreach (JObject boardJson in boardsJson.Value<JArray>("boards"))
             {
-                allBoards.Add( boardJson.Value<string>("board") );
+                allBoards.Add(boardJson.Value<string>("board"));
             }
 
             // pass the list of all the boards into the GetBoards method
@@ -130,7 +130,7 @@ namespace ChanSharp
             if (MetaData != null) { return; }
 
             // Request the boards.json api data and ensure success
-            HttpResponseMessage resp = RequestsClient.Get( urlGenerator.BoardList() );
+            HttpResponseMessage resp = RequestsClient.Get(urlGenerator.BoardList());
             resp.EnsureSuccessStatusCode();
 
             // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
@@ -153,12 +153,12 @@ namespace ChanSharp
         private JToken GetJson(string url)
         {
             // Send request to the url, ensure successfull status code
-            HttpResponseMessage resp = RequestsClient.Get( url );
+            HttpResponseMessage resp = RequestsClient.Get(url);
             resp.EnsureSuccessStatusCode();
 
             // return the Json data as a JToken (JTokens can handle arrays and regular Json)
             string responseContent = resp.Content.ReadAsString();
-            return JToken.Parse( responseContent );
+            return JToken.Parse(responseContent);
         }
 
 
@@ -170,9 +170,9 @@ namespace ChanSharp
             foreach (JToken pageJson in catalogJson)
             {
                 foreach (JObject threadJson in pageJson.Value<JArray>("threads"))
-                { 
+                {
                     JArray posts;
-                    if ( threadJson.ContainsKey("last_replies") )
+                    if (threadJson.ContainsKey("last_replies"))
                     {
                         posts = threadJson.Value<JArray>("last_replies");
                         threadJson.Remove("last_replies");
@@ -201,11 +201,11 @@ namespace ChanSharp
             JArray threadList;
             if (url == UrlGenerator.Catalog())
             {
-                threadList = CatalogToThreads( JArray.FromObject(Json) );
+                threadList = CatalogToThreads(JArray.FromObject(Json));
             }
             else
             {
-                threadList = JArray.FromObject( Json["threads"] );
+                threadList = JArray.FromObject(Json["threads"]);
             }
 
             // Go over each thread Json object
@@ -217,7 +217,7 @@ namespace ChanSharp
                 DateTimeOffset? lastModified = null;
                 if (threadJson.ContainsKey("last_modified"))
                 {
-                    lastModified = DateTimeOffset.FromUnixTimeSeconds( threadJson.Value<long>("last_modified") );
+                    lastModified = DateTimeOffset.FromUnixTimeSeconds(threadJson.Value<long>("last_modified"));
                 }
 
                 // If the thread ID is in the cache, retrieve it from the cache and set WantUpdate to true

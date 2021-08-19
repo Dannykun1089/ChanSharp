@@ -64,7 +64,7 @@ namespace ChanSharp
             Replies = null;
             LastReplyID = 0;
             WantUpdate = false;
-            LastModified = DateTimeOffset.FromUnixTimeSeconds( 0 );
+            LastModified = DateTimeOffset.FromUnixTimeSeconds(0);
 
             RequestsClient = new HttpClient();
             UrlGenerator = new UrlGenerator(board.Name, board.Https);
@@ -118,8 +118,8 @@ namespace ChanSharp
         {
             Thread newThread = new Thread(board, threadID);
 
-            JToken[] postsJson     = threadJson["posts"].ToObject<JToken[]>();
-            JToken   firstPostJson = postsJson[0];
+            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
+            JToken firstPostJson = postsJson[0];
             JToken[] repliesJson;
 
             // If the postsJson length greater than 1, get rid of the first element of postsJson to make repliesJson,
@@ -140,14 +140,14 @@ namespace ChanSharp
             }
 
             // Fill in the thread information from the OP's post Json
-            newThread.ID            = firstPostJson.Value<int?>("no") ?? threadID;
-            newThread.Topic         = new Post(newThread, firstPostJson);
-            newThread.Replies       = replies?.ToArray();
-            newThread.ReplyCount    = firstPostJson.Value<int>("replies");
-            newThread.ImageCount    = firstPostJson.Value<int>("images");
+            newThread.ID = firstPostJson.Value<int?>("no") ?? threadID;
+            newThread.Topic = new Post(newThread, firstPostJson);
+            newThread.Replies = replies?.ToArray();
+            newThread.ReplyCount = firstPostJson.Value<int>("replies");
+            newThread.ImageCount = firstPostJson.Value<int>("images");
             newThread.OmittedImages = firstPostJson.Value<int?>("omitted_images") ?? 0;
-            newThread.OmittedPosts  = firstPostJson.Value<int?>("omitted_posts") ?? 0;
-            newThread.LastModified  = lastModified ?? DateTimeOffset.FromUnixTimeSeconds( 0 );
+            newThread.OmittedPosts = firstPostJson.Value<int?>("omitted_posts") ?? 0;
+            newThread.LastModified = lastModified ?? DateTimeOffset.FromUnixTimeSeconds(0);
 
             // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
             if (threadID == 0)
@@ -167,8 +167,8 @@ namespace ChanSharp
         {
             Thread newThread = new Thread(board, threadID);
 
-            JToken[] postsJson     = threadJson["posts"].ToObject<JToken[]>();
-            JToken   firstPostJson = postsJson[0];
+            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
+            JToken firstPostJson = postsJson[0];
             JToken[] repliesJson;
 
             // If the postsJson length greater than 1, get rid of the first element of postsJson to make repliesJson,
@@ -179,7 +179,7 @@ namespace ChanSharp
                 repliesJson = Util.SliceArray(postsJson, 1);
                 foreach (JObject reply in repliesJson)
                 {
-                    replies.Add( new Post(newThread, reply) );
+                    replies.Add(new Post(newThread, reply));
                 }
             }
             // Else, only the OP is present, and there are no replies
@@ -189,14 +189,14 @@ namespace ChanSharp
             }
 
             // Fill in the thread information from the OP's post Json
-            newThread.ID            = firstPostJson.Value<int?>("no") ?? threadID;
-            newThread.Topic         = new Post(newThread, firstPostJson);
-            newThread.Replies       = replies?.ToArray();
-            newThread.ReplyCount    = firstPostJson.Value<int>("replies");
-            newThread.ImageCount    = firstPostJson.Value<int>("images");
+            newThread.ID = firstPostJson.Value<int?>("no") ?? threadID;
+            newThread.Topic = new Post(newThread, firstPostJson);
+            newThread.Replies = replies?.ToArray();
+            newThread.ReplyCount = firstPostJson.Value<int>("replies");
+            newThread.ImageCount = firstPostJson.Value<int>("images");
             newThread.OmittedImages = firstPostJson.Value<int?>("omitted_images") ?? 0;
-            newThread.OmittedPosts  = firstPostJson.Value<int?>("omitted_posts") ?? 0;
-            newThread.LastModified  = lastModified ?? DateTimeOffset.FromUnixTimeSeconds( 0 );
+            newThread.OmittedPosts = firstPostJson.Value<int?>("omitted_posts") ?? 0;
+            newThread.LastModified = lastModified ?? DateTimeOffset.FromUnixTimeSeconds(0);
 
             // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
             if (threadID == 0)

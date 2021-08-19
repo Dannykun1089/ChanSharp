@@ -24,13 +24,13 @@ namespace ChanSharp
             JObject retVal = new JObject();
 
             // Read the json response content into a JObject 
-            JObject responseJson = JObject.Parse( resp.Content.ReadAsString() );
+            JObject responseJson = JObject.Parse(resp.Content.ReadAsString());
 
             // Iterate over each of the boards
             foreach (JToken boardJson in responseJson["boards"])
             {
                 // Add the board data as a value in a key value pair under its own name, E.G. 'a': { 'board': 'a', ... }
-                retVal.Add( boardJson.Value<string>("board"), boardJson );
+                retVal.Add(boardJson.Value<string>("board"), boardJson);
             }
 
             // Return the return value
