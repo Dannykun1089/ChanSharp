@@ -16,7 +16,6 @@ namespace ChanSharp
         //////////////////////
 
         private HttpClient RequestsClient { get; set; }
-        private string ApiUrl { get; set; }
         private UrlGenerator UrlGenerator { get; set; }
 
         public Board Board { get; set; }
@@ -68,7 +67,6 @@ namespace ChanSharp
 
             RequestsClient = new HttpClient();
             UrlGenerator = new UrlGenerator(board.Name, board.Https);
-            ApiUrl = UrlGenerator.ThreadApiUrl(threadID);
         }
 
 
@@ -88,7 +86,6 @@ namespace ChanSharp
 
             RequestsClient = new HttpClient();
             UrlGenerator = new UrlGenerator(boardName, Board.Https);
-            ApiUrl = UrlGenerator.ThreadApiUrl(threadID);
         }
 
 
