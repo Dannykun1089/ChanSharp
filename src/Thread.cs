@@ -70,25 +70,6 @@ namespace ChanSharp
         }
 
 
-        public Thread(string boardName, int threadID)
-        {
-            Board = new Board(boardName);
-
-            ID = threadID;
-            Is404 = false;
-            OmittedPosts = 0;
-            OmittedImages = 0;
-            Topic = null;
-            Replies = null;
-            WantUpdate = false;
-            LastReplyID = 0;
-            LastModified = DateTimeOffset.FromUnixTimeSeconds(0);
-
-            RequestsClient = new HttpClient();
-            UrlGenerator = new UrlGenerator(boardName, Board.Https);
-        }
-
-
 
         ////////////////////////
         ///   Type methods   ///

@@ -50,30 +50,12 @@ namespace ChanSharp
         }
 
 
-        public Post(string boardName, int threadID, JObject data)
-        {
-            Thread = new Thread(boardName, threadID);
-
-            Data = data;
-            UrlGenerator = new UrlGenerator(Thread.Board.Name, Thread.Board.Https);
-        }
-
-
         public Post(Thread thread, JToken data)
         {
             Thread = thread;
 
             Data = JObject.FromObject(data);
             UrlGenerator = new UrlGenerator(thread.Board.Name, thread.Board.Https);
-        }
-
-
-        public Post(string boardName, int threadID, JToken data)
-        {
-            Thread = new Thread(boardName, threadID);
-
-            Data = JObject.FromObject(data);
-            UrlGenerator = new UrlGenerator(Thread.Board.Name, Thread.Board.Https);
         }
 
 
