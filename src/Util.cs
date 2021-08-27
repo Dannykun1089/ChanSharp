@@ -34,7 +34,7 @@ namespace ChanSharp
         /// </summary>
         /// <param name="resp"> response object from a request made to 'http(s)://a.4cdn.org/boards.json' </param>
         /// <returns> a JObject for use in the Board.MetaData propperty, available in util for static methods </returns>
-        public static JObject MetaDataFromRequest(HttpResponseMessage resp)
+        public static JObject BoardsMetadataFromRequest(HttpResponseMessage resp)
         {
             JObject retVal = new JObject();
 
