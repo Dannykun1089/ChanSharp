@@ -15,7 +15,6 @@ namespace ChanSharp
         //////////////////////
 
         private JObject BoardsMetadata { get; set; }
-        private UrlGenerator UrlGenerator { get; }
         private JArray ThreadsMetadata { get; set; }
         private DateTimeOffset ThreadsLastModified { get; set; }
 
@@ -29,6 +28,7 @@ namespace ChanSharp
         public string Protocol { get; }
 
         internal HttpClient RequestsClient { get; }
+        internal UrlGenerator UrlGenerator { get; }
         internal Dictionary<int, Thread> ThreadCache { get; }
 
 
@@ -43,13 +43,11 @@ namespace ChanSharp
             Https = https;
             Protocol = https ? "https://" : "http://";
 
-            UrlGenerator = new UrlGenerator(boardName, https);
             ThreadsLastModified = DateTimeOffset.MinValue;
 
-            RequestsClient = session ?? new HttpClient();
+            RequestsClient = session ?? Util.newCSHttpClient();
+            UrlGenerator = new UrlGenerator(boardName, https);
             ThreadCache = new Dictionary<int, Thread>();
-
-            RequestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
         }
 
 
@@ -69,21 +67,25 @@ namespace ChanSharp
         ///   Type Methods   ///
         ////////////////////////
 
-        public static Dictionary<string, Board> GetBoards(string[] boardNames, bool https = true, HttpClient session = null)
+        public static Dictionary<string, Board> GetBoards(string[] boardNames, bool https = true, HttpClient session = null, JObject boardsMetadata = null)
         {
-            // Initialize HttpClient and UrlGenerator for static method
-            HttpClient requestsClient = Util.newCSHttpClient();
-            UrlGenerator urlGenerator = new UrlGenerator(null);
+            // If no boardsMetadata has been provided, hit http(s)://a.4cdn.org/boards.json for it
+            if (boardsMetadata is null)
+            {
+                // Initialize HttpClient and UrlGenerator for static method
+                HttpClient requestsClient = session ?? Util.newCSHttpClient();
+                UrlGenerator urlGenerator = new UrlGenerator(null);
 
-            // Request the boards.json api data and ensure success
-            HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
-            resp.EnsureSuccessStatusCode();
+                // Request the boards.json api data and ensure success
+                HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
+                resp.EnsureSuccessStatusCode();
 
-            // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
-            JObject boardsMetadata = Util.BoardsMetadataFromRequest(resp);
+                // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
+                boardsMetadata = Util.BoardsMetadataFromRequest(resp);
 
-            // Dispose of response
-            resp.Dispose();
+                // Dispose of response
+                resp.Dispose();
+            }
 
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
             Dictionary<string, Board> boards = new Dictionary<string, Board>();
@@ -101,22 +103,26 @@ namespace ChanSharp
         }
 
 
-        // System.Collections.Generic.List<string> overload
-        public static Dictionary<string, Board> GetBoards(List<string> boardNames, bool https = true, HttpClient session = null)
+        // List<string> overload
+        public static Dictionary<string, Board> GetBoards(List<string> boardNames, bool https = true, HttpClient session = null, JObject boardsMetadata = null)
         {
-            // Initialize HttpClient and UrlGenerator for static method
-            HttpClient requestsClient = Util.newCSHttpClient();
-            UrlGenerator urlGenerator = new UrlGenerator(null);
+            // If no boardsMetadata has been provided, hit http(s)://a.4cdn.org/boards.json for it
+            if (boardsMetadata is null)
+            {
+                // Initialize HttpClient and UrlGenerator for static method
+                HttpClient requestsClient = session ?? Util.newCSHttpClient();
+                UrlGenerator urlGenerator = new UrlGenerator(null);
 
-            // Request the boards.json api data and ensure success
-            HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
-            resp.EnsureSuccessStatusCode();
+                // Request the boards.json api data and ensure success
+                HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
+                resp.EnsureSuccessStatusCode();
 
-            // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
-            JObject boardsMetadata = Util.BoardsMetadataFromRequest(resp);
+                // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
+                boardsMetadata = Util.BoardsMetadataFromRequest(resp);
 
-            // Dispose of response
-            resp.Dispose();
+                // Dispose of response
+                resp.Dispose();
+            }
 
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
             Dictionary<string, Board> boards = new Dictionary<string, Board>();
@@ -136,28 +142,26 @@ namespace ChanSharp
 
         public static Dictionary<string, Board> GetAllBoards(bool https = true, HttpClient session = null)
         {
-            // Create new HttpClient and UrlGenerator. Add Api User-Agent header
-            HttpClient requestsClient = session ?? new HttpClient();
+            // Initialize HttpClient and UrlGenerator for static method
+            HttpClient requestsClient = session ?? Util.newCSHttpClient();
             UrlGenerator urlGenerator = new UrlGenerator(null);
-            requestsClient.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
 
-            // Request a list of all boards from 4Chan
+            // Hit http(s)://a.4cdn.org/boards.json for a response
             HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
             resp.EnsureSuccessStatusCode();
 
-            // Parse the response content into a JObject, and get the list of board objects
-            JObject boardsJson = JObject.Parse(resp.Content.ReadAsString());
-            JArray boardsList = boardsJson.Value<JArray>("boards");
+            // Parse the response content into the BoardsMetaData format
+            JObject boardsMetadata = Util.BoardsMetadataFromRequest(resp);
 
             // Itterate over each board Json and add it's name to the list
             List<string> allBoards = new List<string>();
-            foreach (JObject boardJson in boardsList)
+            foreach (KeyValuePair<string, JToken> boardJson in boardsMetadata)
             {
-                allBoards.Add(boardJson.Value<string>("board"));
+                allBoards.Add(boardJson.Key);
             }
 
             // pass the list of all the boards into the GetBoards method
-            return GetBoards(allBoards, https, session);
+            return GetBoards(allBoards, https, session, boardsMetadata);
         }
 
 
