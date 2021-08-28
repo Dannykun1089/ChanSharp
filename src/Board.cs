@@ -71,11 +71,29 @@ namespace ChanSharp
 
         public static Dictionary<string, Board> GetBoards(string[] boardNames, bool https = true, HttpClient session = null)
         {
+            // Initialize HttpClient and UrlGenerator for static method
+            HttpClient requestsClient = Util.newCSHttpClient();
+            UrlGenerator urlGenerator = new UrlGenerator(null);
+
+            // Request the boards.json api data and ensure success
+            HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
+            resp.EnsureSuccessStatusCode();
+
+            // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
+            JObject boardsMetadata = Util.BoardsMetadataFromRequest(resp);
+
+            // Dispose of response
+            resp.Dispose();
+
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
             Dictionary<string, Board> boards = new Dictionary<string, Board>();
             foreach (string boardName in boardNames)
             {
-                boards.Add(boardName, new Board(boardName, https, session));
+                Board newBoard = new Board(boardName, https, session)
+                {
+                    BoardsMetadata = boardsMetadata
+                };
+                boards.Add(boardName, newBoard);
             }
 
             // Return the dictionary
@@ -86,11 +104,29 @@ namespace ChanSharp
         // System.Collections.Generic.List<string> overload
         public static Dictionary<string, Board> GetBoards(List<string> boardNames, bool https = true, HttpClient session = null)
         {
+            // Initialize HttpClient and UrlGenerator for static method
+            HttpClient requestsClient = Util.newCSHttpClient();
+            UrlGenerator urlGenerator = new UrlGenerator(null);
+
+            // Request the boards.json api data and ensure success
+            HttpResponseMessage resp = requestsClient.Get(urlGenerator.BoardList());
+            resp.EnsureSuccessStatusCode();
+
+            // Parse the response data, reconstruct it and return it in the ChanSharpBoard.MetaData format
+            JObject boardsMetadata = Util.BoardsMetadataFromRequest(resp);
+
+            // Dispose of response
+            resp.Dispose();
+
             // Itterate over each board name, add dictionary entry 'boardName': new Board()
             Dictionary<string, Board> boards = new Dictionary<string, Board>();
             foreach (string boardName in boardNames)
             {
-                boards.Add(boardName, new Board(boardName, https, session));
+                Board newBoard = new Board(boardName, https, session)
+                {
+                    BoardsMetadata = boardsMetadata
+                };
+                boards.Add(boardName, newBoard);
             }
 
             // Return the dictionary

@@ -87,5 +87,14 @@ namespace ChanSharp
             }
             return retVal;
         }
+
+
+        // Returns a new HttpClient with the appropriate headers
+        public static HttpClient newCSHttpClient()
+        {
+            HttpClient retVal = new HttpClient();
+            retVal.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
+            return retVal;
+        }
     }
 }
