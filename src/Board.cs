@@ -200,7 +200,7 @@ namespace ChanSharp
 
         // Takes in the /{board}/catalog.json Json data as a JArray and reconstructs it
         // Into a format more similar to /{board}/threads.json [NOTE: INSERT FORMAT DEFINITION]
-        private JArray CatalogToThreads(JArray catalogJson)
+        private static JArray CatalogToThreads(JArray catalogJson)
         {
             JArray threadsList = new JArray();
             foreach (JObject pageJson in catalogJson)
