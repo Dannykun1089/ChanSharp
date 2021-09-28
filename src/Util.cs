@@ -73,24 +73,22 @@ namespace ChanSharp
 
 
         // CSharp be like "haha lets not include native array slicing like python" SCREEEEEEEEE
-        public static T[] SliceArray<T>(T[] original, int offset)
+        public static T[] SliceArray<T>(T[] src, int offset)
         {
-            // If index is less than 0 or more than the original array's length, throw out of bounds exception
-            // If index is equal to original's length, return empty array
-            if (offset < 0 || offset > original.Length) { throw new IndexOutOfRangeException(); }
-            if (offset == original.Length) { return Array.Empty<T>(); }
+            if (offset < 0 || offset > src .Length) { throw new IndexOutOfRangeException(); }
+            if (offset == src.Length) { return Array.Empty<T>(); }
 
-            T[] retVal = new T[original.Length - offset];
+            T[] retVal = new T[src.Length - offset];
             for (int i = 0; i < retVal.Length; i++)
             {
-                retVal[i] = original[i + offset];
+                retVal[i] = src[i + offset];
             }
             return retVal;
         }
 
 
-        // Returns a new HttpClient with the appropriate headers
-        public static HttpClient newCSHttpClient()
+        // Returns a new HttpClient with the appropriate headers for the wrapper
+        public static HttpClient NewCSHttpClient()
         {
             HttpClient retVal = new HttpClient();
             retVal.DefaultRequestHeaders.Add("User-Agent", "ChanSharp");
