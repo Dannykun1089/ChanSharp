@@ -39,7 +39,7 @@ foreach(ChanSharp.File file in randThread.Files)
 
 
 ## Basic thread watcher
-```
+```csharp
 // Probably not an actual thread ID
 int threadId = 12345678;
 ChanSharp.Thread threadToWatch = New ChanSharp.Board("c").GetThread(threadId);
