@@ -56,6 +56,5 @@ while(true)
 	if(newPosts > 0)
 	{
 		Console.WriteLine($"{newPosts} new posts on the thread\nThread now has {threadToWatch.AllPosts.Length} posts");
-		}
 	}
 ```
