@@ -42,7 +42,7 @@ foreach(ChanSharp.File file in randThread.Files)
 ```csharp
 // Probably not an actual thread ID
 int threadId = 12345678;
-ChanSharp.Thread threadToWatch = New ChanSharp.Board("c").GetThread(threadId);
+ChanSharp.Thread threadToWatch = new ChanSharp.Board("c").GetThread(threadId);
 
 Console.WriteLine($"Thread has {threadToWatch.AllPosts.Length} posts")
 
