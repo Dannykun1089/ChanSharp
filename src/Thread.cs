@@ -15,24 +15,23 @@ namespace ChanSharp
         ///   Properties   ///
         //////////////////////
 
-        private HttpClient RequestsClient { get; set; }
-        private UrlGenerator UrlGenerator { get; set; }
+        private DateTimeOffset? LastModified { get; set; }
 
-        public Board Board { get; set; }
+        public Board Board { get; }
 
-        public int ID { get; set; }
+        public int ID { get; internal set; }
         public bool Closed { get => Closed_get(); }
         public bool Sticky { get => Sticky_get(); }
         public bool Archived { get => Archived_get(); }
         public bool BumpLimit { get => BumpLimit_get(); }
         public bool ImageLimit { get => ImageLimit_get(); }
-        public bool Is404 { get; set; }
-        public int ReplyCount { get; set; }
-        public int ImageCount { get; set; }
-        public int OmittedPosts { get; set; }
-        public int OmittedImages { get; set; }
-        public Post Topic { get; set; }
-        public Post[] Replies { get; set; }
+        public bool Is404 { get; internal set; }
+        public int ReplyCount { get; internal set; }
+        public int ImageCount { get; internal set; }
+        public int OmittedPosts { get; internal set; }
+        public int OmittedImages { get; internal set; }
+        public Post Topic { get; internal set; }
+        public Post[] Replies { get; internal set; }
         public Post[] Posts { get => Posts_get(); }
         public Post[] AllPosts { get => AllPosts_get(); }
         public File[] Files { get => Files_get(); }
@@ -41,32 +40,37 @@ namespace ChanSharp
         public string SemanticSlug { get => SemanticSlug_get(); }
         public string SemanticUrl { get => SemanticUrl_get(); }
         public int CustomSpoilers { get => CustomSpoilers_get(); }
-        public bool WantUpdate { get; set; }
-        public int LastReplyID { get; set; }
-        public DateTimeOffset LastModified { get; set; }
+        public bool WantUpdate { get; internal set; }
+        public int LastReplyID { get; internal set; }
 
+        internal HttpClient RequestsClient { get; }
+        internal UrlGenerator UrlGenerator { get; }
 
 
         ////////////////////////
         ///   Constructors   ///
         ////////////////////////
 
+        // Do not use constructor to make Thread objects, use Board.GetThread() and similar methods
         public Thread(Board board, int threadID)
         {
+            LastModified = null;
+
             Board = board;
 
             ID = threadID;
             Is404 = false;
+            ReplyCount = 0;
+            ImageCount = 0;
             OmittedPosts = 0;
             OmittedImages = 0;
             Topic = null;
             Replies = null;
-            LastReplyID = 0;
             WantUpdate = false;
-            LastModified = DateTimeOffset.FromUnixTimeSeconds(0);
+            LastReplyID = 0;
 
-            RequestsClient = new HttpClient();
-            UrlGenerator = new UrlGenerator(board.Name, board.Https);
+            RequestsClient = board.RequestsClient;
+            UrlGenerator = new(board.Name, board.Https);
         }
 
 
@@ -75,116 +79,56 @@ namespace ChanSharp
         ///   Type methods   ///
         ////////////////////////
 
-        // These are the methods used to properly fill out the object
-
         // From a request to http(s)://a.4cdn.org/{board}/thread/{threadId}.json
-        public static Thread FromRequest(string boardName, HttpResponseMessage resp, int threadId = 0)
+        public static Thread FromRequest(Board board, HttpResponseMessage resp, int threadId = 0)
         {
-            // Ensure the request is ok
-            if (resp.StatusCode == HttpStatusCode.NotFound) { return null; }
-            resp.EnsureSuccessStatusCode();
-
             // Parse the response content into a JObject and get the Last-Modified value from the content headers
             JObject jsonContent = JObject.Parse(resp.Content.ReadAsString());
-            DateTimeOffset lastModified = resp.Content.Headers.LastModified.Value;
+            DateTimeOffset? lastModified = resp.Content.Headers.LastModified.Value;
 
-            return FromJson(jsonContent, new Board(boardName), threadId, lastModified);
+            return FromJson(board, jsonContent, threadId, lastModified);
         }
 
 
-        public static Thread FromJson(JObject threadJson, Board board, int threadID = 0, DateTimeOffset? lastModified = null)
+        public static Thread FromJson(Board board, JObject threadJson, int threadID = 0, DateTimeOffset? lastModified = null)
         {
-            Thread newThread = new Thread(board, threadID);
+            Thread newThread = new(board, threadID);
 
-            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
-            JToken firstPostJson = postsJson[0];
-            JToken[] repliesJson;
+            JObject[] postsJson = threadJson["posts"].ToObject<JObject[]>();
+            JObject firstPostJson = postsJson[0];
+            JObject[] repliesJson = Util.SliceArray(postsJson, 1, postsJson.Length - 1);
 
-            // If the postsJson length greater than 1, get rid of the first element of postsJson to make repliesJson,
-            // Itterate over each reply Json in repliesJson and add a new Post object to replies
-            List<Post> replies = new List<Post>();
+            // Generate the list of replies 
+            List<Post> replies = null;
             if (postsJson.Length > 1)
             {
-                repliesJson = Util.SliceArray(postsJson, 1);
-                foreach (JObject reply in repliesJson)
+                replies = new();
+                foreach (JObject replyJson in repliesJson)
                 {
-                    replies.Add(new Post(newThread, reply));
+                    replies.Add(new Post(newThread, replyJson));
                 }
             }
-            // Else, only the OP is present, and there are no replies
-            else
-            {
-                replies = null;
-            }
 
-            // Fill in the thread information from the OP's post Json
+            // Fill in the thread information from the thread's Json data
             newThread.ID = firstPostJson.Value<int?>("no") ?? threadID;
             newThread.Topic = new Post(newThread, firstPostJson);
             newThread.Replies = replies?.ToArray();
             newThread.ReplyCount = firstPostJson.Value<int>("replies");
             newThread.ImageCount = firstPostJson.Value<int>("images");
-            newThread.OmittedImages = firstPostJson.Value<int?>("omitted_images") ?? 0;
-            newThread.OmittedPosts = firstPostJson.Value<int?>("omitted_posts") ?? 0;
-            newThread.LastModified = lastModified ?? DateTimeOffset.FromUnixTimeSeconds(0);
+            newThread.OmittedImages = firstPostJson.Value<int>("omitted_images");
+            newThread.OmittedPosts = firstPostJson.Value<int>("omitted_posts");
+            newThread.LastModified = lastModified;
 
-            // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
+            // If for some reason the thread ID wasnt passed in, set want update to true
             if (threadID == 0)
             {
                 newThread.WantUpdate = true;
             }
             else
             {
-                newThread.LastReplyID = newThread.Replies == null ? newThread.Topic.ID : newThread.Replies.Last().ID;
-            }
-            return newThread;
-        }
-
-
-        //Overload for instances where threadJson is a JToken
-        public static Thread FromJson(JToken threadJson, Board board, int threadID = 0, DateTimeOffset? lastModified = null)
-        {
-            Thread newThread = new Thread(board, threadID);
-
-            JToken[] postsJson = threadJson["posts"].ToObject<JToken[]>();
-            JToken firstPostJson = postsJson[0];
-            JToken[] repliesJson;
-
-            // If the postsJson length greater than 1, get rid of the first element of postsJson to make repliesJson,
-            // Itterate over each reply Json in repliesJson and add a new Post object to replies
-            List<Post> replies = new List<Post>();
-            if (postsJson.Length > 1)
-            {
-                repliesJson = Util.SliceArray(postsJson, 1);
-                foreach (JObject reply in repliesJson)
-                {
-                    replies.Add(new Post(newThread, reply));
-                }
-            }
-            // Else, only the OP is present, and there are no replies
-            else
-            {
-                replies = null;
+                newThread.LastReplyID = newThread.Replies?.Last().ID ?? newThread.Topic.ID;
             }
 
-            // Fill in the thread information from the OP's post Json
-            newThread.ID = firstPostJson.Value<int?>("no") ?? threadID;
-            newThread.Topic = new Post(newThread, firstPostJson);
-            newThread.Replies = replies?.ToArray();
-            newThread.ReplyCount = firstPostJson.Value<int>("replies");
-            newThread.ImageCount = firstPostJson.Value<int>("images");
-            newThread.OmittedImages = firstPostJson.Value<int?>("omitted_images") ?? 0;
-            newThread.OmittedPosts = firstPostJson.Value<int?>("omitted_posts") ?? 0;
-            newThread.LastModified = lastModified ?? DateTimeOffset.FromUnixTimeSeconds(0);
-
-            // If we couldnt get the threadID, set WantUpdate to true, else set the LastReplyID
-            if (threadID == 0)
-            {
-                newThread.WantUpdate = true;
-            }
-            else
-            {
-                newThread.LastReplyID = newThread.Replies == null ? newThread.Topic.ID : newThread.Replies.Last().ID;
-            }
             return newThread;
         }
 
@@ -193,39 +137,27 @@ namespace ChanSharp
         ///   Public Instance Methods   ///
         ///////////////////////////////////
 
-        // Updates this thread
+        // Updates this thread, fetching new posts
         public int Update(bool force = false)
         {
             if (Is404 && !force) { return 0; }
 
-            if (LastModified != null)
-            {
-                RequestsClient.DefaultRequestHeaders.IfModifiedSince = LastModified;
-            }
-
-            // Random connection errors, return 0 and try again later
-            HttpResponseMessage resp;
-            try
-            {
-                resp = RequestsClient.GetAsync(UrlGenerator.ThreadApiUrl(ID)).Result;
-            }
-            catch
-            {
-                return 0;
-            }
+            // Hit http(s)://a.4cdn.org/{board}/{threadID}.json for the thread's current data
+            RequestsClient.DefaultRequestHeaders.IfModifiedSince = LastModified;
+            HttpResponseMessage resp = RequestsClient.Get(UrlGenerator.ThreadApiUrl(ID));
 
             switch (resp.StatusCode)
             {
-                // 304 - Not Modified: No new posts
-                case HttpStatusCode.NotModified:
-                    return 0;
-
                 // 404 - Not Found: Thread died
                 case HttpStatusCode.NotFound:
+                    // Set Is404 to true and remove post from cache because it's gone
                     Is404 = true;
-
-                    // Remove post from cache because it's gone
                     Board.ThreadCache.Remove(ID);
+
+                    return 0;
+
+                // 304 - Not Modified: No new posts
+                case HttpStatusCode.NotModified:
                     return 0;
 
                 // 200 - OK: Thread is alive
@@ -239,44 +171,26 @@ namespace ChanSharp
 
                     int originalPostCount = Replies.Length;
 
-                    JToken[] posts = JObject.Parse(resp.Content.ReadAsStringAsync().Result).Value<JArray>("posts").ToObject<JToken[]>();
+                    JArray postsJson = JObject.Parse(resp.Content.ReadAsString()).Value<JArray>("posts");
 
-                    Topic = new Post(this, posts[0]);
+                    Topic = new Post(this, postsJson[0].ToObject<JObject>());
                     WantUpdate = false;
                     OmittedImages = 0;
                     OmittedPosts = 0;
+
+                    // Update the LastModified value from the response headers
                     LastModified = resp.Content.Headers.LastModified.Value;
 
-                    if (LastReplyID > 0 && !force)
+                    // Add all the posts to a list
+                    List<Post> newReplies = new();
+                    foreach (JObject postJson in postsJson)
                     {
-                        // Add the new replies to a list
-                        List<Post> newReplies = new List<Post> { };
-                        foreach (JToken post in posts)
-                        {
-                            if (post.Value<int>("no") > LastReplyID) { newReplies.Add(new Post(this, post)); }
-                        }
-
-                        // Insert the old replies before the new replies
-                        newReplies.InsertRange(0, Replies);
-
-                        Replies = newReplies.ToArray();
-                    }
-                    else
-                    {
-                        // Add all the posts to a list
-                        List<Post> newReplies = new List<Post>();
-                        foreach (JToken post in posts)
-                        {
-                            newReplies.Add(new Post(this, post));
-                        }
-
-                        // Remove the OP and set the Replies property
-                        newReplies.RemoveAt(0);
-
-                        Replies = newReplies.ToArray();
+                        newReplies.Add(new Post(this, postJson));
                     }
 
-
+                    // Remove the OP, as it is a seperate property
+                    newReplies.RemoveAt(0);
+                    Replies = newReplies.ToArray();
                     LastReplyID = Replies.Last().ID;
 
                     return Replies.Length - originalPostCount;
@@ -338,19 +252,22 @@ namespace ChanSharp
 
         private Post[] Posts_get()
         {
+            // If for whatever reason there is no topic, return null
+            if (Topic is null)
+            {
+                return null;
+            }
+
             // If there are no replies, return the topic as a single element array
-            if (Replies == null)
+            if (Replies is null)
             {
                 return new Post[] { Topic };
             }
-            // Else add the Topic and Replies to a list of posts and return it as an array
-            else
-            {
-                List<Post> retVal = new List<Post>();
-                retVal.Add(Topic);
-                retVal.AddRange(Replies);
-                return retVal.ToArray();
-            }
+
+            // Else, add the Topic and Replies to a list of posts and return it as an array
+            List<Post> retVal = new() { Topic };
+            retVal.AddRange(Replies);
+            return retVal.ToArray();
         }
 
 
@@ -363,17 +280,23 @@ namespace ChanSharp
 
         private File[] Files_get()
         {
-            // If the thread only has the OP, check if it has a file, if it does, return a single element array 
-            // Containing that file, if it doesnt, return null
-            if (Posts.Length == 1)
+            //If for whatever reason the thread has no topic, return null
+            if (Topic is null)
             {
-                if (Posts[0].HasFile) { return new File[] { Posts[0].File }; }
+                return null;
+            }
+
+            // If the thread only contains the op, return its' file as a single element array if present
+            // Else return null
+            if (Replies is null)
+            {
+                if (Topic.HasFile) { return new File[] { Topic.File }; }
                 return null;
             }
 
             // Else, the thread has an OP and 1 or more replies, itterate over each of them 
             // And if they have a file, add it to the list
-            List<File> retVal = new List<File>();
+            List<File> retVal = new();
             foreach (Post post in Posts)
             {
                 if (post.HasFile) { retVal.Add(post.File); }
@@ -387,7 +310,7 @@ namespace ChanSharp
 
         private string[] ThumbnailUrls_get()
         {
-            List<string> retVal = new List<string>();
+            List<string> retVal = new();
             foreach (File file in Files)
             {
                 retVal.Add(file.ThumbnailUrl);

@@ -1,11 +1,32 @@
 ﻿# Quick Start
 The following are some code snippets to show you what you can do with this wrapper
 
+## Note
+The class names defined by ChanSharp may overlap with others, such as Thread and File. You have 2 options to work around this
+
+### Aliasing:
+```csharp
+using CSBoard = ChanSharp.Board;
+using CSThread = ChanSharp.Thread;
+using CSPost = ChanSharp.Post;
+using CSFile = ChanSharp.File;
+```
+Add this at the top of your source, and use the prefix CS before the class names
+
+
+### Full Names:
+```csharp
+ChanSharp.Thread thread = new ChanSharp.Board("c").GetThread(123456789);
+```
+Use the class names in full
+
+For the sake of simplicity, the following code examples will assume you've used the first option
+
 ## Listing the names of all the boards
 ```csharp
-Dictionary<string, ChanSharp.Board> boards = ChanSharp.Board.GetAllBoards();
+Dictionary<string, CSBoard> boards = CSBoard.GetAllBoards();
 
-foreach(KeyValuePair<string, Board> boardKvp in boards)
+foreach(KeyValuePair<string, CSBoard> boardKvp in boards)
 {
 	Console.Writeline($"{boardKvp.Key} : {boardKvp.Value.Title}");
 }
@@ -16,13 +37,13 @@ foreach(KeyValuePair<string, Board> boardKvp in boards)
 ```csharp
 Random rng = new Random();
 
-ChanSharp.Board cute = new ChanSharp.Board("c");
+CSBoard cute = new CSBoard("c");
 	
 int[] threadIds = cute.GetAllThreadIDs();
 int threadId = threadIds[rng.Next(0, threadIds.Length - 1)];
-ChanSharp.Thread randThread = cute.GetThread(threadId);
+CSThread randThread = cute.GetThread(threadId);
 
-foreach(ChanSharp.File file in randThread.Files)
+foreach(CSFile file in randThread.Files)
 {
 	switch (file.FileExtension)
 	{
@@ -42,7 +63,7 @@ foreach(ChanSharp.File file in randThread.Files)
 ```csharp
 // Probably not an actual thread ID
 int threadId = 12345678;
-ChanSharp.Thread threadToWatch = new ChanSharp.Board("c").GetThread(threadId);
+CSThread threadToWatch = new CSBoard("c").GetThread(threadId);
 
 Console.WriteLine($"Thread has {threadToWatch.AllPosts.Length} posts")
 

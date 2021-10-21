@@ -9,8 +9,8 @@ namespace ChanSharp
         ///   Properties   ///
         //////////////////////
 
-        public Board Board { get; set; }
-        public Thread Thread { get; set; }
+        public Board Board { get; }
+        public Thread Thread { get; }
 
         public int ID { get => ID_get(); }
         public int PosterID { get => PosterID_get(); }
@@ -31,7 +31,7 @@ namespace ChanSharp
         public string SemanticSlug { get => SemanticSlug_get(); }
         public string SemanticUrl { get => SemanticUrl_get(); }
 
-        public JObject Data { get; set; }
+        public JObject Data { get; }
 
 
 
@@ -41,6 +41,7 @@ namespace ChanSharp
 
         public Post(Thread thread, JObject data)
         {
+            Board = thread.Board;
             Thread = thread;
 
             Data = data;
@@ -49,9 +50,10 @@ namespace ChanSharp
 
         public Post(Thread thread, JToken data)
         {
+            Board = thread.Board;
             Thread = thread;
 
-            Data = JObject.FromObject(data);
+            Data = data.ToObject<JObject>();
         }
 
 
@@ -117,7 +119,6 @@ namespace ChanSharp
         }
 
 
-        //todo: clean comment body util func
         private string TextComment_get()
         {
             return Util.CleanCommentBody(HTMLComment);

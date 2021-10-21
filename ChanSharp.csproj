@@ -1,44 +1,49 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <LangVersion>9.0</LangVersion>
     <TargetFramework>netstandard2.0</TargetFramework>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <ApplicationIcon></ApplicationIcon>
     <Authors>DannyK</Authors>
     <Company>N/A</Company>
     <Product>N/A</Product>
     <Description>A 4Chan API wrapper heavily based on bibanon's "basc-py4chan" python wrapper</Description>
-    <PackageLicenseExpression></PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/Dannykun1089/ChanSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Dannykun1089/ChanSharp.git</RepositoryUrl>
     <PackageTags>4Chan, 4Channel, Yotsuba, Api, Wrapper</PackageTags>
     <NeutralLanguage>en</NeutralLanguage>
     <SignAssembly>false</SignAssembly>
-    <Version>0.0.3</Version>
+    <Version>0.0.4</Version>
     <PackageLicenseFile>Licence.txt</PackageLicenseFile>
-    <StartupObject />
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <AssemblyOriginatorKeyFile>ChanSharp.pfx</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+    <Copyright>N/A</Copyright>
   </PropertyGroup>
 
+  
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <Optimize>false</Optimize>
     <DebugType>full</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <WarningLevel>5</WarningLevel>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <DocumentationFile />
+    <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <WarningLevel>0</WarningLevel>
-    <DefineConstants />
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <DocumentationFile />
+    <GenerateSerializationAssemblies>On</GenerateSerializationAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Licence.txt" />
     <None Include="Licence.txt">
       <Pack>True</Pack>
-      <PackagePath></PackagePath>
+      <PackagePath />
     </None>
   </ItemGroup>
 
