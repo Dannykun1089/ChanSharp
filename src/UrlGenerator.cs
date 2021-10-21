@@ -2,7 +2,7 @@
 
 namespace ChanSharp
 {
-	internal class UrlGenerator
+    internal class UrlGenerator
 	{
 		//////////////////////
 		///   Properties   ///

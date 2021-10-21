@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿/////////////////////////////////////////////////////
+///   Extension Methods to Prevent Code Clutter   ///
+/////////////////////////////////////////////////////
+
+using Newtonsoft.Json.Linq;
 using System.Net.Http;
 
 namespace Extensions

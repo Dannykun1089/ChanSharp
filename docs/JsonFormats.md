@@ -1,7 +1,5 @@
 ﻿# Json Formats
-BASC-py4chan and hence ChanSharp use a set of predefined Json formats 
-<br />
-some defined by the 4chan api and some by the wrappers themselves
+BASC-py4chan and hence ChanSharp use a set of predefined Json formats, some defined by the 4chan api and some by the wrappers themselves
 <br />
 <br />
 This doccument contains definitions for all these
@@ -13,7 +11,17 @@ These are the Json formats used by the official 4chan api, these are constant an
 
 ### /boards.json
 <hr />
-
+```
+[
+	{
+		'board': The name of the board, E.G. "c",
+		'title': The long name of the board, E.G. "cute"
+	},
+	{
+		...
+	}
+]
+```
 <hr />
 
 ### /{board}/{pageNum}.json
@@ -51,7 +59,7 @@ Note: For reference, please see [here](https://github.com/4chan/4chan-API)
 These are the custom Json formats used within BASC-py4chan and ChanSharp
 <hr />
 
-### Board.MetaData
+### Board.BoardsMetaData
 <hr />
 
 for each board
@@ -84,3 +92,8 @@ for each board
 	},
 }
 ```
+
+<hr />
+
+### Board.ThreadsMetaData
+see [/{board}/threads.json](#boardthreadsjson)

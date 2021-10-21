@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace ChanSharp
 {
@@ -22,15 +23,15 @@ namespace ChanSharp
         public string FileNameFull { get => FileNameFull_get(); }
         public string FileNameOriginal { get => FileNameOriginal_get(); }
         public string FileNameOriginalFull { get => FileNameOriginalFull_get(); }
-        public string FileExtension { get => FileExtension_get(); }
-        public string FileUrl { get => FileUrl_get(); }
-        public int FileSize { get => FileSize_get(); }
-        public int FileWidth { get => FileWidth_get(); }
-        public int FileHeight { get => FileHeight_get(); }
-        public byte[] FileContent { get => FileContent_get(); }
-        public bool FileDeleted { get => FileDeleted_get(); }
-        public byte[] FileMD5 { get => FileMD5_get(); }
-        public string FileMD5Hex { get => FileMD5Hex_get(); }
+        public string Extension { get => Extension_get(); }
+        public string Url { get => Url_get(); }
+        public int Size { get => Size_get(); }
+        public int Width { get => FileWidth_get(); }
+        public int Height { get => FileHeight_get(); }
+        public byte[] Content { get => FileContent_get(); }
+        public bool Deleted { get => FileDeleted_get(); }
+        public byte[] MD5 { get => FileMD5_get(); }
+        public string MD5Hex { get => FileMD5Hex_get(); }
         public string ThumbnailFileName { get => ThumbnailFileName_get(); }
         public string ThumbnailFileNameFull { get => ThumbnailFileNameFull_get(); }
         public string ThumbnailUrl { get => ThumbnailUrl_get(); }
@@ -78,13 +79,25 @@ namespace ChanSharp
 
         public HttpResponseMessage FileRequest()
         {
-            return RequestsClient.GetAsync(FileUrl).Result;
+            return RequestsClient.GetAsync(Url).Result;
         }
 
 
         public HttpResponseMessage ThumbnailRequest()
         {
             return RequestsClient.GetAsync(ThumbnailUrl).Result;
+        }
+
+
+        public Task<HttpResponseMessage> FileRequestAsync()
+        {
+            return RequestsClient.GetAsync(Url);
+        }
+
+
+        public Task<HttpResponseMessage> ThumbnailRequestAsync()
+        {
+            return RequestsClient.GetAsync(ThumbnailUrl);
         }
 
 
@@ -117,19 +130,19 @@ namespace ChanSharp
         }
 
 
-        private string FileExtension_get()
+        private string Extension_get()
         {
             return Data.Value<string>("ext");
         }
 
 
-        private string FileUrl_get()
+        private string Url_get()
         {
             return UrlGenerator.FileUrls(Data.Value<string>("tim"), Data.Value<string>("ext"));
         }
 
 
-        private int FileSize_get()
+        private int Size_get()
         {
             return Data.Value<int>("fsize");
         }
@@ -150,7 +163,7 @@ namespace ChanSharp
         private byte[] FileContent_get()
         {
             // Return null if data couldn't be obtained for whatever reason
-            HttpResponseMessage resp = RequestsClient.GetAsync(FileUrl).Result;
+            HttpResponseMessage resp = RequestsClient.GetAsync(Url).Result;
             return resp.IsSuccessStatusCode ? resp.Content.ReadAsByteArrayAsync().Result : null;
         }
 
@@ -164,13 +177,13 @@ namespace ChanSharp
         private byte[] FileMD5_get()
         {
             string md5Base64String = Data.Value<string>("MD5");
-            return Util.Base64Decode(md5Base64String);
+            return Convert.FromBase64String(md5Base64String);
         }
 
 
         private string FileMD5Hex_get()
         {
-            return BitConverter.ToString(FileMD5);
+            return BitConverter.ToString(MD5);
         }
 
 
