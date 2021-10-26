@@ -31,7 +31,7 @@ namespace ChanSharp
         public string SemanticSlug { get => SemanticSlug_get(); }
         public string SemanticUrl { get => SemanticUrl_get(); }
 
-        public JObject Data { get; }
+        internal JObject Data { get; }
 
 
 
@@ -64,11 +64,11 @@ namespace ChanSharp
 
         public override string ToString()
         {
-            return String.Format("<Post /{0}/{1}#{2}, has_file: {3}>",
-                Thread.Board.Name,
-                Thread.ID,
-                ID,
-                HasFile ? "true" : "false");
+            return string.Format("<Post /{0}/{1}#{2}, has_file: {3}>",
+                                 Board.Name,
+                                 Thread.ID,
+                                 ID,
+                                 HasFile ? "yes" : "no");
         }
 
 

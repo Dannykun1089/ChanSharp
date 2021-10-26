@@ -15,9 +15,9 @@ namespace ChanSharp
         private JObject Data { get; }
         private UrlGenerator UrlGenerator { get; }
 
-        public Board Board { get; set; }
-        public Thread Thread { get; set; }
-        public Post Post { get; set; }
+        public Board Board { get; }
+        public Thread Thread { get; }
+        public Post Post { get; }
 
         public string FileName { get => FileName_get(); }
         public string FileNameFull { get => FileNameFull_get(); }
@@ -51,9 +51,9 @@ namespace ChanSharp
             Thread = post.Thread;
             Board = post.Thread.Board;
 
-            RequestsClient = new HttpClient();
+            RequestsClient = post.Thread.Board.RequestsClient;
             Data = post.Data;
-            UrlGenerator = new UrlGenerator(Board.Name, Board.Https);
+            UrlGenerator = post.Thread.Board.UrlGenerator;
         }
 
 
@@ -64,11 +64,11 @@ namespace ChanSharp
 
         public override string ToString()
         {
-            return string.Format("<File {0} from Post /{1}/{2}#{3}>",
-                FileName,
-                Board.Name,
-                Thread.ID,
-                Post.ID);
+            return string.Format("<File /{0}/{1}#{2}, name: {3}>",
+                                 Board.Name,
+                                 Thread.ID,
+                                 Post.ID,
+                                 FileNameOriginalFull);
         }
 
 
