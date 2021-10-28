@@ -101,7 +101,7 @@ namespace ChanSharp
             return FromJson(board, jsonContent, threadId, lastModified);
         }
 
-
+        //TODO, maybe: The last_replies property should be turned into Posts at the end not the start of replies
         public static Thread FromJson(Board board, JObject threadJson, int threadID = 0, DateTimeOffset? lastModified = null)
         {
             Thread newThread = new(board, threadID);
