@@ -185,7 +185,7 @@ namespace ChanSharp
 
                     JArray postsJson = JObject.Parse(resp.Content.ReadAsString()).Value<JArray>("posts");
 
-                    Topic = new Post(this, postsJson[0].ToObject<JObject>());
+                    Topic = new Post(this, postsJson[0]);
                     WantUpdate = false;
                     OmittedImages = 0;
                     OmittedPosts = 0;

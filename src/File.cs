@@ -5,14 +5,16 @@ using System.Threading.Tasks;
 
 namespace ChanSharp
 {
+    using Extensions;
+
     public class File
     {
         //////////////////////
         ///   Properties   ///
         //////////////////////
 
-        private HttpClient RequestsClient { get; }
         private JObject Data { get; }
+        private HttpClient RequestsClient { get; }
         private UrlGenerator UrlGenerator { get; }
 
         public Board Board { get; }
@@ -49,11 +51,11 @@ namespace ChanSharp
         {
             Post = post;
             Thread = post.Thread;
-            Board = post.Thread.Board;
+            Board = post.Board;
 
-            RequestsClient = post.Thread.Board.RequestsClient;
             Data = post.Data;
-            UrlGenerator = post.Thread.Board.UrlGenerator;
+            RequestsClient = post.Board.RequestsClient;
+            UrlGenerator = post.Board.UrlGenerator;
         }
 
 
@@ -79,13 +81,13 @@ namespace ChanSharp
 
         public HttpResponseMessage FileRequest()
         {
-            return RequestsClient.GetAsync(Url).Result;
+            return RequestsClient.Get(Url);
         }
 
 
         public HttpResponseMessage ThumbnailRequest()
         {
-            return RequestsClient.GetAsync(ThumbnailUrl).Result;
+            return RequestsClient.Get(ThumbnailUrl);
         }
 
 
@@ -163,8 +165,8 @@ namespace ChanSharp
         private byte[] FileContent_get()
         {
             // Return null if data couldn't be obtained for whatever reason
-            HttpResponseMessage resp = RequestsClient.GetAsync(Url).Result;
-            return resp.IsSuccessStatusCode ? resp.Content.ReadAsByteArrayAsync().Result : null;
+            HttpResponseMessage resp = RequestsClient.Get(Url);
+            return resp.IsSuccessStatusCode ? resp.Content.ReadAsByteArray() : null;
         }
 
 
@@ -220,8 +222,8 @@ namespace ChanSharp
         private byte[] ThumbnailContent_get()
         {
             // Return null if data couldn't be obtained for whatever reason
-            HttpResponseMessage resp = RequestsClient.GetAsync(ThumbnailUrl).Result;
-            return resp.IsSuccessStatusCode ? resp.Content.ReadAsByteArrayAsync().Result : null;
+            HttpResponseMessage resp = RequestsClient.Get(ThumbnailUrl);
+            return resp.IsSuccessStatusCode ? resp.Content.ReadAsByteArray() : null;
         }
     }
 }

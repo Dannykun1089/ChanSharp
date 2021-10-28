@@ -30,6 +30,12 @@ namespace Extensions
         }
 
 
+        public static byte[] ReadAsByteArray(this HttpContent content)
+        {
+            return content.ReadAsByteArrayAsync().Result;
+        }
+
+
 
         ////////////////////////////////////////
         ///   HttpClient Extension Methods   ///
