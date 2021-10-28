@@ -300,16 +300,16 @@ namespace ChanSharp
 
 
         // Takes in the /{board}/catalog.json Json data as a JArray and reconstructs it
-        // Into a format more similar to /{board}/threads.json [NOTE: INSERT FORMAT DEFINITION]
+        // Into a format [NOTE: INSERT FORMAT DEFINITION]
         private static JArray CatalogToThreads(JArray catalogJson)
         {
-            JArray threadsList = new();
+            JArray threadsList = new JArray();
             foreach (JObject pageJson in catalogJson)
             {
                 foreach (JObject threadJson in pageJson.Value<JArray>("threads"))
                 {
                     JArray posts = threadJson.Value<JArray>("last_replies");
-                    
+
                     if (posts is null)
                     {
                         posts = threadJson.ToObject<JArray>();
@@ -319,7 +319,8 @@ namespace ChanSharp
                         threadJson.Remove("last_replies");
                         posts.Insert(0, threadJson);
                     }
-                    threadsList["posts"] = posts;
+
+                    threadsList.Add(JObject.Parse($"{{'posts': {posts}}}"));
                 }
             }
             return threadsList;
