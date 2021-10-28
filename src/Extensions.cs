@@ -1,25 +1,9 @@
-﻿/////////////////////////////////////////////////////
-///   Extension Methods to Prevent Code Clutter   ///
-/////////////////////////////////////////////////////
-
-using Newtonsoft.Json.Linq;
-using System.Net.Http;
+﻿using System.Net.Http;
 
 namespace Extensions
 {
     internal static class Extensions
     {
-        ////////////////////////////////////
-        ///   JToken Extension Methods   ///
-        ////////////////////////////////////
-
-        public static bool ContainsKey(this JToken jt, string key)
-        {
-            return jt[key] != null;
-        }
-
-
-
         /////////////////////////////////////////
         ///   HttpContent Extension Methods   ///
         /////////////////////////////////////////
