@@ -312,7 +312,7 @@ namespace ChanSharp
 
                     if (posts is null)
                     {
-                        posts = threadJson.ToObject<JArray>();
+                        posts = JArray.Parse($"[{threadJson}]");
                     }
                     else
                     {

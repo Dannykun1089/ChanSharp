@@ -108,13 +108,14 @@ namespace ChanSharp
 
             JObject[] postsJson = threadJson["posts"].ToObject<JObject[]>();
             JObject firstPostJson = postsJson[0];
-            JObject[] repliesJson = Util.SliceArray(postsJson, 1, postsJson.Length - 1);
+
 
             // Generate the list of replies 
             List<Post> replies = null;
             if (postsJson.Length > 1)
             {
-                replies = new();
+                JObject[] repliesJson = Util.SliceArray(postsJson, 1, postsJson.Length - 1);
+                replies = new List<Post>();
                 foreach (JObject replyJson in repliesJson)
                 {
                     replies.Add(new Post(newThread, replyJson));
