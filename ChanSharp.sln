@@ -5,11 +5,6 @@ VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChanSharp", "ChanSharp.csproj", "{57D71120-0C99-4213-8A45-574097CECF07}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChanSharp DEBUG", "..\ChanSharp DEBUG\ChanSharp DEBUG\ChanSharp DEBUG.csproj", "{7B80E65A-05C1-46FE-8F5D-1DD412330BFE}"
-	ProjectSection(ProjectDependencies) = postProject
-		{57D71120-0C99-4213-8A45-574097CECF07} = {57D71120-0C99-4213-8A45-574097CECF07}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,10 +15,6 @@ Global
 		{57D71120-0C99-4213-8A45-574097CECF07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{57D71120-0C99-4213-8A45-574097CECF07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{57D71120-0C99-4213-8A45-574097CECF07}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7B80E65A-05C1-46FE-8F5D-1DD412330BFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B80E65A-05C1-46FE-8F5D-1DD412330BFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B80E65A-05C1-46FE-8F5D-1DD412330BFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B80E65A-05C1-46FE-8F5D-1DD412330BFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
