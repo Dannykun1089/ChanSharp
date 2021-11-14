@@ -17,7 +17,9 @@ It's my first time making a library, or doing anything big in C# so bugs will be
 Install-Package ChanSharp -Version VERSION_NUM
 ```
 2) Visual Studio
+
 Install it from VS' built in NuGet package browser
 
 3) Download from GitHub
+
 Go to releases and download the latest .dll file which you can link to your project
