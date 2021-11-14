@@ -1,4 +1,4 @@
-﻿#ChanSharp
+﻿# ChanSharp
 
 I couldn't find a sufficiently doccumented API wrapper for 4chan on nuget, github or gitlab so i made one myself. 
 
