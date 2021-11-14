@@ -174,6 +174,12 @@ namespace ChanSharp
         }
 
 
+        public Thread GetThread(string threadID, bool updateIfCached = true, bool raise404 = false)
+        {
+            return GetThread(int.Parse(threadID), updateIfCached, raise404);
+        }
+
+
         public Thread[] GetThreads(int page)
         {
             string url = UrlGenerator.PageUrls(page);
