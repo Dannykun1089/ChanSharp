@@ -6,7 +6,9 @@ It's my first time making a library, or doing anything big in C# so bugs will be
 
 ## Relevant Links
 [Quickstart Guide](https://github.com/Dannykun1089/ChanSharp/blob/StableUpdate/docs/QuickStart.md#user-content-quick-start)
+
 [Class Documentation](https://github.com/Dannykun1089/ChanSharp/tree/StableUpdate/docs/Types/)
+
 [NuGet Page](https://www.nuget.org/packages/ChanSharp/)
 
 ## How to install
